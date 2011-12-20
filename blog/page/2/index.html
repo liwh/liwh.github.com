@@ -1,0 +1,1148 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Code for fun</title>
+  <meta name="author" content="liwh">
+
+  
+  <meta name="description" content="这里介绍一下在osx 下如何创建后台服务。比如，创建一些开机自启动的后台服务等等，
+在linux 中我们一般用我们一般是创建对应的init.d脚本添加自启动服务。在mac osx中，
+我们一般是先创建对应的launchd plist文件. introduce 一般，plist &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://liwh.github.com/blog/page/2">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Code for fun" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20088141-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Code for fun</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liwh.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/03/22/osx-launchd/">Introduce Mac OSX Launchd</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-22T00:00:00+08:00" pubdate data-updated="true">Mar 22<span>nd</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>这里介绍一下在osx 下如何创建后台服务。比如，创建一些开机自启动的后台服务等等，
+在linux 中我们一般用我们一般是创建对应的init.d脚本添加自启动服务。在mac osx中，
+我们一般是先创建对应的launchd plist文件.</p>
+
+<h1>introduce</h1>
+
+<p>一般，plist 文件主要放在以下几个目录中。我们可以在下面几个目录中找到大量的plist文件。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  ~/Library/LaunchAgents         Per-user agents provided by the user.
+</span><span class='line'>  /Library/LaunchAgents          Per-user agents provided by the administrator.
+</span><span class='line'>  /Library/LaunchDaemons         System-wide daemons provided by the administrator.
+</span><span class='line'>  /System/Library/LaunchAgents   Per-user agents provided by Mac OS X.
+</span><span class='line'>  /System/Library/LaunchDaemons  System-wide daemons provided by Mac OS X.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>下面是如何将mongodb自启动的plist文件</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+</span><span class='line'><span class="cp">&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;</span>
+</span><span class='line'><span class="nt">&lt;plist</span> <span class="na">version=</span><span class="s">&quot;1.0&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'><span class="nt">&lt;dict&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;key&gt;</span>Label<span class="nt">&lt;/key&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;string&gt;</span>org.mongodb.mongod<span class="nt">&lt;/string&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;key&gt;</span>ProgramArguments<span class="nt">&lt;/key&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;array&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;string&gt;</span>/usr/local/bin/mongod<span class="nt">&lt;/string&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;string&gt;</span>run<span class="nt">&lt;/string&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;string&gt;</span>--dbpath<span class="nt">&lt;/string&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;string&gt;</span>/usr/local/var/mongodb<span class="nt">&lt;/string&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;string&gt;</span>--logpath<span class="nt">&lt;/string&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;string&gt;</span>/usr/local/var/log/mongodb.log<span class="nt">&lt;/string&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;/array&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;key&gt;</span>RunAtLoad<span class="nt">&lt;/key&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;true/&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;key&gt;</span>KeepAlive<span class="nt">&lt;/key&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;true/&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;key&gt;</span>UserName<span class="nt">&lt;/key&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;string&gt;</span>root<span class="nt">&lt;/string&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;key&gt;</span>WorkingDirectory<span class="nt">&lt;/key&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;string&gt;</span>/usr/local<span class="nt">&lt;/string&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;key&gt;</span>StandardErrorPath<span class="nt">&lt;/key&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;string&gt;</span>/usr/local/var/log/mongodb/output.log<span class="nt">&lt;/string&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;key&gt;</span>StandardOutPath<span class="nt">&lt;/key&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;string&gt;</span>/usr/local/var/log/mongodb/output.log<span class="nt">&lt;/string&gt;</span>
+</span><span class='line'><span class="nt">&lt;/dict&gt;</span>
+</span><span class='line'><span class="nt">&lt;/plist&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在我们创建完所需要的launchd.plist文件加载呢，我们需使用下面的命令</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  sudo launchctl load /Library/LaunchDaemons/org.mongodb.mongod.plist
+</span><span class='line'>  <span class="c">#当我们不需要启动这服务的时候，我们只需要unload that plist文件</span>
+</span><span class='line'>  sudo launchctl unload /Library/LaunchDaemons/org.mongodb.mongod.plist
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h1>参考资料</h1>
+
+<p><a href="http://www.devdaily.com/mac-os-x/launchd-examples-launchd-plist-file-examples-mac">launchd examples</a>
+<a href="http://developer.apple.com/library/mac/#documentation/Darwin/Reference/ManPages/man5/launchd.plist.5.html">launchd.plist</a>
+<a href="http://developer.apple.com/library/mac/#documentation/Darwin/Reference/ManPages/man8/launchd.8.html">launchd</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/03/20/textmate-shortcuts/">Textmate快捷键</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-20T00:00:00+08:00" pubdate data-updated="true">Mar 20<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>这里介绍一些textmate的常用快捷键。</p>
+
+<h2>光标移动</h2>
+
+<p>textmate默认的光标移动是类似emacs的。如果你习惯了vim的形式的光标移动，可以安装 <a href="http://sourceforge.net/projects/tm-vi-plugin/">vimode插件</a></p>
+
+<p>c-f : 向右移动光标
+c-b : 向左移动光标
+c-n : 向下移动光标
+c-p : 向上移动光标
+command－← :光标移动到行首(c-a)
+command－→ :光标移动到行尾(c-e)
+command－↑ :光标移动到文件头
+command+数字 :tab间移动
+command－↓ :光标移动到文件尾
+c － ← :移动一个单词向左
+c－→ : 向右移动一个单词</p>
+
+<h2>编辑</h2>
+
+<p>ctrl + t :调换选中文本顺序，如果没有选中任何文本则对换光标左右字符位置
+ctrl + o :不移动光标同时插入新的一行
+ctrl + y :复制出刚被删除的文本
+ctrl + k :删除光标到行尾的所有字符
+ctrl + d :删除光标右侧一个字符
+ctrl + w:选中当前单词
+shift + 左 :移动一次向左选定一个字符
+shift + 右 :移动一次向右选定一个字符
+ctrl + command + 左 :移动选中字符向左移动一个字符
+ctrl + command + 右 :移动选中字符向右移动一个字符
+shift + command + f :搜索当前项目
+shift + command + l :选中当前行
+shift + command + 左 :选中光标到行首
+shift + command + 右 :选中光标到行尾</p>
+
+<h2>查找移动</h2>
+
+<p>ctrl-s :查找匹配的字符</p>
+
+<p>shift+command+t :通过symbol查找,在ruby中，只查找class/method 定义。</p>
+
+<h2>行移动</h2>
+
+<p>command-L :移动到指定行</p>
+
+<h2>常用命令</h2>
+
+<p>command + t : 查找文件
+ctrl + ⌘  + 上下键：移动整行
+ctrl + shift + k： 删除整行
+ctrl + shift +d：复制整行
+ctrl + shift + T :查看todo
+command + ] : 增加text indent
+command + [ : 删除text indent
+command + shift + 方向键 :选中
+esc :自动补完，补完顺序视变量数量而定
+shift + ctrl + option + x : x为你想切换的语言的首字母，比如Python则是P，HTML则是H
+opt + cmd + . :自动增加html close tag</p>
+
+<h2>参考资料</h2>
+
+<p><a href="http://www.hazaah.com/programming/textmate-and-vim/">textmate and vim</a>
+快捷键: <a href="/images/textmate_shortcuts_1920.png"><img src="/images/textmate_shortcuts_1920.png" width="300" height="200" alt="" /></href></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/03/20/textmate-setup/">Textmate Setup</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-20T00:00:00+08:00" pubdate data-updated="true">Mar 20<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h1>_CLI Setup (CLI命令行界面)</h1>
+
+<p>当我们第一次使用textmate的时候，我们会看到下面的界面
+!/images/1_cli_setup.png!
+设置这个之后，我们就可以在命令行中使用mate命令调用textmate了。你可以使用mate &#8211;help查看其详细的使用方式</p>
+
+<h1>Preferences</h1>
+
+<h2>General</h2>
+
+<p>我们可以通过设置Preferences来定制textmate.
+!/images/2_preferences_general.png!</p>
+
+<h2>Fonts &amp; Color</h2>
+
+<p>!../images/fonts.png!
+我们可以设置textmate字体和颜色，我们可以从 <a href="http://wiki.macromates.com/Themes/UserSubmittedThemes">textmate主题</a> 中找到自己喜欢的主题。 个人比较喜欢 <a href="https://github.com/ryanb/textmate-themes">railscasts的深色主题</a> 如果，你想自己去定制颜色和主题的话，你得了解 <a href="http://manual.macromates.com/en/language_grammars">Language Grammars</a> 和 <a href="http://manual.macromates.com/en/scope_selectors">Scope Selector</a></p>
+
+<h2>Advanced</h2>
+
+<p><a href="http://manual.macromates.com/en/saving_files">Saving</a> &amp;&amp; <a href="http://manual.macromates.com/en/environment_variables#project_dependent_variables">Shell Variables</a></p>
+
+<h1>Text-area Setup</h1>
+
+<h2>Tabs and spaces</h2>
+
+<p>在textate的下面，我们可以设置tab size. 设置tab对应多少个空格。可以查看 <a href="http://manual.macromates.com/en/working_with_text#using_spaces_instead_of_tabs">Manual</a></p>
+
+<h2>Gutter Setup</h2>
+
+<p>!/images/10_gutter_wrap.png!
+我们可以在这里设置显示行号等等 <a href="http://manual.macromates.com/en/navigation_overview">设置</a></p>
+
+<h1>参考资料</h1>
+
+<p><a href="http://projects.serenity.de/textmate/tutorials/setup/">textmate-tutorial-setup</a></p>
+
+<p><a href="http://blog.macromates.com/2007/getting-into-textmate/">getting-into-textmate</a></p>
+
+<p><a href="http://wiki.macromates.com/Main/Plugins">textmate-plugins</a></p>
+
+<p><a href="http://www.rayfile.com/zh-cn/files/cba167ee-f918-11dd-85c3-0019d11a795f/">textmate中文字体</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/03/03/install-zsh/">Unix Shell &#8211; Zsh</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-03T00:00:00+08:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最近，看了下unix下的shell,发现品种还是挺多的，如系统默认的bash,还有csh等等，
+但是 个人觉得现在最好用的还是zsh,由于zsh具有很强大的自动补全和纠错功能，还有高度可定制性及
+扩张 等特性， 被称作“the last shell you&#8217;ll ever need”.这里，说说它的安装和使用，还有一些简单的特性。</p>
+
+<h2>安装</h2>
+
+<p> 相比原生的zsh,个人觉得还是oh-my-zsh好用些，毕竟这里对zsh做了一些很好的定制，
+ 具体安装过程可以参见 <a href="https://github.com/robbyrussell/oh-my-zsh">安装过程</a>
+ 其中，注意切换默认用户的shell命令为</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  chsh  -s /bin/zsh
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>binding keys</h2>
+
+<p> 我们可以加入一些快捷键，例如，在bash里面，我们通常用c-a和c-e来返回当前行的行首和行尾，还有查找
+ 使用过的命令c-r.这些，我们在zsh当然同样也可以定制。我们可以通过bindkey查看所有的zsh keybord shortcuts</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="n">bindkey</span> <span class="s1">&#39;^A&#39;</span> <span class="n">beginning</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">line</span>
+</span><span class='line'>  <span class="n">bindkey</span> <span class="s1">&#39;^E&#39;</span> <span class="k">end</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">line</span>
+</span><span class='line'>  <span class="n">bindkey</span> <span class="s2">&quot;^R&quot;</span> <span class="n">history</span><span class="o">-</span><span class="n">incremental</span><span class="o">-</span><span class="n">search</span><span class="o">-</span><span class="n">backward</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>主题</h2>
+
+<p> 在oh-my-zsh中，有很多主题。具体的可以参见 <a href="https://github.com/robbyrussell/oh-my-zsh/wiki/themes">zsh-theme</a>
+ 同样，你也可以定制自己喜欢的主题。</p>
+
+<h2>注意</h2>
+
+<p> 这里要注意，当我们使用zsh的时候，得注意讲.bash_profile中的一些命令，复制到.zshrc中，最主要的是，当你使用
+ rvm做你的ruby version manager的时候，一定要将下面这句话放在.zshrc中。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#auto start the rvm shell on terminal</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">[[</span> -s /Users/Apple/.rvm/scripts/rvm <span class="o">]]</span> ; <span class="k">then </span><span class="nb">source</span> /Users/Apple/.rvm/scripts/rvm ; <span class="k">fi</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>参考资料</h2>
+
+<p> <a href="https://wiki.archlinux.org/index.php/Zsh">zshwiki</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/12/24/introduce-git/">Git使用</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-24T00:00:00+08:00" pubdate data-updated="true">Dec 24<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>git是现在最流行的版本的版本控制系统了,并且它是免费而且开源的。并且它支持多分支，我们可以很轻易
+的创建分支和合并分支。现在越来越多的项目正在用git,如eclipse rails android.. 除此之外，现在常用
+的版本控制系统还有cvs,svn,vss等等。。</p>
+
+<h2>git quick start</h2>
+
+<p> 例如，当我们向github平台提交我们的代码时，我们可以执行以下代码</p>
+
+<div>
+  <pre>
+    <code class='bash'>git add .
+  git commit -m 'first commit'
+  #将本地本件提交到github server的master brach
+  git push this master</code>
+  </pre>
+</div>
+
+
+<p>这样，我们的代码就提交到github server了，我们在github的project中就能清楚看到我们提交的代码.</p>
+
+<h2>git command list</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c"># 显示当前代码库的状态，增加，修改，删除了什么文件，这样我们可以很清楚的看到，我们对代码的改动.</span>
+</span><span class='line'>  git status
+</span><span class='line'>
+</span><span class='line'>  <span class="c"># 显示代码的改动细节，方便我们对代码进行对比。知道改动了什么。 后面的options color是为了方便利用颜色的对比清晰的看到改动</span>
+</span><span class='line'>  git diff --color
+</span><span class='line'>
+</span><span class='line'>  <span class="c">#查看git的忽略文件（即上传的时候不提交的文件，这个可以通过正则去匹配）</span>
+</span><span class='line'>  cat .gitignore
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>step by step learning</h2>
+
+<h3>用户配置</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c"># 设置用户</span>
+</span><span class='line'>  git config --global user.name <span class="s2">&quot;liwh&quot;</span>
+</span><span class='line'>  git config --global user.email <span class="s2">&quot;liwh87@gmail.com&quot;</span>
+</span><span class='line'>  <span class="c">#设置默认的提交的仓库，这样，修改的代码会默认提交到此仓库</span>
+</span><span class='line'>  git config --global push.default <span class="s2">&quot;example&quot;</span>
+</span><span class='line'>  <span class="c">#查看设置的git变量</span>
+</span><span class='line'>  git config --list
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>高亮显示</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#在控制台高亮显示信息</span>
+</span><span class='line'>  git config --global color.status auto
+</span><span class='line'>  git config --global color.branch auto
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>创建仓库，增加和提交</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#初始化本地仓库，讲当前目录下文件，加入git的管理</span>
+</span><span class='line'>  git init
+</span><span class='line'>  <span class="c">#将所有的文件和目录加入git控制</span>
+</span><span class='line'>  git add .
+</span><span class='line'>  <span class="c">#提交文件到本地的仓库</span>
+</span><span class='line'>  git commit -m <span class="s1">&#39;initial commit&#39;</span>
+</span><span class='line'>  <span class="c">#查看日志文件</span>
+</span><span class='line'>  git log
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>查看不同和提交更改</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#查看不同</span>
+</span><span class='line'>  git diff --color
+</span><span class='line'>  <span class="c">#提交更改</span>
+</span><span class='line'>  git commit -m -a <span class="s1">&#39;first commit&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>增加remote</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#add ../remote-repository.git with the name origin</span>
+</span><span class='line'>  git remote add origin ../remote-repository.git
+</span><span class='line'>  git commit -a -m <span class="s1">&#39;this is the first commit the remote repository&#39;</span>
+</span><span class='line'>  git push origin
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>创建分支</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#add branch</span>
+</span><span class='line'>  git branch b
+</span><span class='line'>  <span class="c">#go to the branch b</span>
+</span><span class='line'>  git checkout b
+</span><span class='line'>  <span class="c">#delete branch b</span>
+</span><span class='line'>  git branch -d b
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>合并分支</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#将b分支合并到当前分支</span>
+</span><span class='line'>  git merge b
+</span><span class='line'>  <span class="c">#选择某一个分支中的一个或几个commit来进行合并</span>
+</span><span class='line'>  git cherry-pick commit-id
+</span><span class='line'>  <span class="c">#还有就是通过git rebase 来合并，它会根据时间顺序来进行一个一个的合并</span>
+</span><span class='line'>  git rebase  b
+</span><span class='line'>  <span class="c">#处理冲突继续</span>
+</span><span class='line'>  git rebase --continu
+</span><span class='line'>  <span class="c">#取消合并</span>
+</span><span class='line'>  git rebase -- abort
+</span><span class='line'>  <span class="c">#更新本地分支的远程repo的url</span>
+</span><span class='line'>  git remote <span class="nb">set</span>-url remote_name new_url
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>储存</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#储存变更</span>
+</span><span class='line'>  git stash
+</span><span class='line'>  <span class="c">#查看储存列表</span>
+</span><span class='line'>  git stash list
+</span><span class='line'>  <span class="c">#还原最近一次仓库里的代码</span>
+</span><span class='line'>  git stash apply
+</span><span class='line'>  <span class="c">#指定恢复的代码</span>
+</span><span class='line'>  git stash apply stash@<span class="o">{</span>2<span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Tag</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#增加tag</span>
+</span><span class='line'>  git tag -a v0.5 -m “Version 0.5 Stable”
+</span><span class='line'>  <span class="c">#删除tag</span>
+</span><span class='line'>  git tag -d v0.0.1
+</span><span class='line'>  <span class="c">#github add tag</span>
+</span><span class='line'>  git push origin tagname
+</span><span class='line'>  <span class="c">#remove tag</span>
+</span><span class='line'>  git push origin :tagname
+</span><span class='line'>  <span class="c">#提交本地的最近的tag</span>
+</span><span class='line'>  git push origin --tags
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/12/16/rake-tutorial/">Rake Tutorial</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-16T00:00:00+08:00" pubdate data-updated="true">Dec 16<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>我们在使用rails的过程中，经常都会用到rake,比如说执行rails数据库脚本的时候，
+我们用rake db:migrate等等。这里介绍下如何在rails中使用rake任务。</p>
+
+<h2>关于rake</h2>
+
+<p>rake是一个构建任务的工具。rake任务可以完全用ruby代码写。具体可参见: <a href="https://github.com/jimweirich/rake">jimweirich</a></p>
+
+<h2>rake的用法</h2>
+
+<p>这里我们定义一个shell任务，生成一个文件，并向文件中写入helloworld.以rakefile的名字把下面代码保存在任意目录下。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">directory</span> <span class="s2">&quot;tmp&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">file</span> <span class="s2">&quot;hello.tmp&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;tmp&quot;</span> <span class="k">do</span>
+</span><span class='line'><span class="n">sh</span> <span class="s2">&quot;echo &#39;Hello&#39; &gt;&gt; &#39;tmp/hello.tmp&#39;&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这样我们执行它就会产生下面的效果</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">liweihui</span><span class="vi">@desktop</span><span class="ss">:~</span><span class="err">$</span> <span class="n">rake</span> <span class="n">hello</span><span class="o">.</span><span class="n">tmp</span>
+</span><span class='line'><span class="p">(</span><span class="k">in</span><span class="sr"> /home/</span><span class="n">liweihui</span><span class="p">)</span>
+</span><span class='line'><span class="n">mkdir</span> <span class="o">-</span><span class="nb">p</span> <span class="n">tmp</span>
+</span><span class='line'><span class="n">echo</span> <span class="s1">&#39;Hello&#39;</span> <span class="o">&gt;&gt;</span> <span class="s1">&#39;tmp/hello.tmp&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>利用rake写rails任务</h2>
+
+<p>在rails中，一般把rake 任务放在lib/tasks目录下，但必须以.rake的后缀保存,用于编写项目中一些自动化的功能.比如：我们要输出当前环境下数据库结构的当前版本。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">namespace</span> <span class="ss">:do</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">desc</span> <span class="s2">&quot;print the migration version&quot;</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:schema_version</span> <span class="o">=&gt;</span> <span class="ss">:environment</span> <span class="k">do</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">select_value</span><span class="p">(</span><span class="s1">&#39;select version from schema_info&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我们执行在terminal中执行 rake db:schema_version 就能输出版本结果了。其中namespace是用来定义命名空间的，我们可以将多个类似的任务放在一个namespace中，这也就是将任务进行分组.
+另外，我们还可以获取termial中的参数，来定义rake任务中变量的值。比如，我们执行rake db:rollback step=&#8230;就是这样的。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">desc</span> <span class="s2">&quot;Make coffee&quot;</span>
+</span><span class='line'><span class="n">task</span> <span class="ss">:make_coffee</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">cups</span> <span class="o">=</span> <span class="no">ENV</span><span class="o">[</span><span class="s2">&quot;COFFEE_CUPS&quot;</span><span class="o">]</span> <span class="o">||</span> <span class="mi">2</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="s2">&quot;Made </span><span class="si">#{</span><span class="n">cups</span><span class="si">}</span><span class="s2"> cups of coffee. Shakes are gone.&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这里我们就可以执行这样的命令rake &#8230; COFFEE_CUPS = 3 。</p>
+
+<h2>相关资料</h2>
+
+<p><a href="http://docs.rubyrake.org/">Rake document</a></p>
+
+<p><a href="http://jasonseifer.com/2010/04/06/rake-tutorial">Rake tutorila</a></p>
+
+<p><a href="http://railscasts.com/episodes/66-custom-rake-tasks">Custom Rake Tasks</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/12/08/study-resource/">Study Resource</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-08T00:00:00+08:00" pubdate data-updated="true">Dec 8<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h1>学习html+css</h1>
+
+<p>  <a href="http://zh.html.net/tutorials/css">学习CSS</a></p>
+
+<h1>linux 开机自动启动脚本方法</h1>
+
+<p>  <a href="http://linux.chinaunix.net/techdoc/beginner/2010/01/07/1153083.shtml">linux开机自动启动脚本</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/12/06/install-mongodb/">安装MongoDB</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-06T00:00:00+08:00" pubdate data-updated="true">Dec 6<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最近，安装了下NoSql的MongoDB数据库,这是一个基于
+分布式文件存储的数据库开源项目，由C++ 语言编写。
+旨在为WEB应用提供可护展的高性能数据存储解决方案。
+常用于高流量网站，在线游戏网站和搜索引擎的大规模数据管理和分类。
+另外，在rails中，它也存在对应的ORM框架 <a href="https://github.com/mongoid/mongoid">Mongoid</a> ，可用来替代Rails自带的ActiveRecord。
+现在最新版本是1.6,<a href="http://www.mongodb.org/downloads">下载地址</a>
+下面介绍下在OS X下的安装步骤：</p>
+
+<h2>安装homebrew</h2>
+
+<p>现在,在os x下比较流行的包管理是用homebrew,替代了MacPorts.
+具体步骤见:<a href="http://mxcl.github.com/homebrew/">安装homebrew</a></p>
+
+<h2>安装MongoDB</h2>
+
+<ul>
+<li>sudo brew install mongodb</li>
+<li>sudo cp /usr/local/Cellar/mongodb/1.6.XXXXX/org.mongodb.mongod.plist  /Library/LaunchDaemons/</li>
+<li>sudo launchctl load /Library/LaunchDaemons/org.mongodb.mongod.plist</li>
+</ul>
+
+
+<h2>参考资料</h2>
+
+<p><a href="http://shiftcommathree.com/articles/how-to-install-mongodb-on-os-x">How to install MongoDB on OS X</a></p>
+
+<h2>MongoDB学习资料</h2>
+
+<p><a href="http://www.javaeye.com/news/16677-mongodb">MongoDB入门学习资料</a>
+<a href="http://www.markus-gattol.name/ws/mongodb.html">Details for mongodb</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2009/09/12/jquery-plugin/">jQuery常用插件</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-09-12T00:00:00+08:00" pubdate data-updated="true">Sep 12<span>th</span>, 2009</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>jQuery的简洁高效，越来越受到程序员的欢迎了
+这里介绍我使用过的jQuery插件</p>
+
+<h2>jrails</h2>
+
+<p>jrails不算是一个jquery的插件，而是一个js适配器
+用于将rails自带的js框架prototype，无缝地替换为jQuery
+强烈推荐使用
+<a href="http://ennerchi.com/projects/jrails">project</a></p>
+
+<h2>facebox</h2>
+
+<p>实现lightbox功能
+<a href="http://plugins.jquery.com/project/facebox">project</a>
+手动处理：修正跟blueprintcss框架冲突导致facebox边框显示重叠的问题
+<a href="http://famspam.com/facebox/">demo</a></p>
+
+<h2>times</h2>
+
+<p>定时器
+<a href="http://plugins.jquery.com/project/timers">project</a>
+<a href="http://jquery.offput.ca/timers/">demo</a></p>
+
+<h2>tooltip</h2>
+
+<p>title属性指定指示信息显得有点简陋了，用tooltip实现Div层提示
+手动处理：修正在firefox下提示层定位不准的问题
+<a href="http://flowplayer.org/tools/index.html">project</a>
+<a href="http://flowplayer.org/tools/tooltip.html">demo</a></p>
+
+<h2>easy slider</h2>
+
+<p>内容较大(多行)的情况下，实现滚动显示内容
+手动处理：增加了鼠标移入时暂停滚动，修正滚动至最后一项后不能平滑过渡到第一项的问题
+<a href="http://cssglobe.com/post/5780/easy-slider-17-numeric-navigation-jquery-slider">project</a>
+<a href="http://cssglobe.com/lab/easyslider1.7/03.html">demo</a></p>
+
+<h2>Jcrop</h2>
+
+<p>用于框选图片中的区域，以实现定位或对图片进行裁剪
+<a href="http://plugins.jquery.com/project/Jcrop">project</a>
+<a href="http://deepliquid.com/projects/Jcrop/demos.php">demo</a></p>
+
+<h2>label over</h2>
+
+<p>一般情况下，输入框旁边都会带上label说明
+在布局较小的情况下，也许你希望输入框内容直接显示说明
+当用户输入内容时，说明内容自动清除，label over就是实现此功能的插件
+<a href="http://plugins.jquery.com/project/labelover">project</a>
+<a href="http://remysharp.com/wp-content/uploads/2007/03/label_over_example.html">demo</a></p>
+
+<h2>ZeroClipboard</h2>
+
+<p>结合Flash实现跨浏览器复制网页中内容(或当前地址)到剪贴板
+严格来说这个不算jQuery的插件:)
+<a href="http://code.google.com/p/zeroclipboard/">project</a></p>
+
+<h2>MultiFile</h2>
+
+<p>实现浏览器多文件上传时，只显示一个文件浏览按钮</p>
+
+<pre>
+1.修正删除按钮样式
+$.fn.MultiFile.options.STRING.remove = '<a class="icon-16px-box j-icon i-close">&nbsp;</a>';
+</pre>
+
+
+<p><a href="http://www.fyneworks.com/jquery/multiple-file-upload/">project</a></p>
+
+<h2>JQZoom</h2>
+
+<p>放大查看图片某一部分，网购产品必备</p>
+
+<p><a href="http://www.mind-projects.it/projects/jqzoom">project</a>
+<a href="http://www.mind-projects.it/projects/jqzoom/demos.php">demo</a></p>
+
+<h2>jCarousellite</h2>
+
+<p>显示图片组</p>
+
+<p><a href="http://www.gmarwaha.com/jquery/jcarousellite/index.php">project</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2011/11/05/build-oauth2-provider/">build-oauth2-provider</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/09/28/introduce-active-admin-framework/">后台管理框架active_admin</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/">将rails项目升级到rails 3.1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/12/rails3-email-setup/">rails3中邮件服务设置</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/09/use-pow-for-railsapp/">使用pow作为rails server</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2011 - liwh -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liwh87';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,471 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>introduce the resque based on redis - Code for fun</title>
+  <meta name="author" content="liwh">
+
+  
+  <meta name="description" content="在项目中，很多时候，我们的代码都是从上到下依次执行的，就是说，
+得等到上面的任务完成之后，下面的任务才能执行， 但是，很多时候，
+当用户提交一个很耗时间的请求的时候，这时候，为了让用户不需要等待，
+去做别的事情，我们就得把 这些耗时间的任务放在后台执行了。用于后台
+任务执行的插件，在ruby中， &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://liwh.github.com/blog/2011/03/31/introduce-redis-resque">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Code for fun" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20088141-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Code for fun</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liwh.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Introduce the Resque Based on Redis</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-31T00:00:00+08:00" pubdate data-updated="true">Mar 31<span>st</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>在项目中，很多时候，我们的代码都是从上到下依次执行的，就是说，
+得等到上面的任务完成之后，下面的任务才能执行， 但是，很多时候，
+当用户提交一个很耗时间的请求的时候，这时候，为了让用户不需要等待，
+去做别的事情，我们就得把 这些耗时间的任务放在后台执行了。用于后台
+任务执行的插件，在ruby中，是有不少数的，具体的，可以看下这篇文章
+<a href="https://github.com/blog/542-introducing-resque">introduceing resque</a> ,这里面介绍了几个后台任务执行的插件和
+resque的对比，resque是用于github平台的任务插件。</p>
+
+<p>Resque是一个基于redis的后台任务的Ruby库，将任务放在redis的多个队列中，并且待会执行它们。</p>
+
+<h1>安装</h1>
+
+<p>首先，由于它是基于redis的，所以，得先安装redis，resque则已gem的形式安装</p>
+
+<div>
+  <pre>
+    <code class='shell'>#install redis on osx
+  sudo brew install redis
+  gem install redis redis-namespace yajl-ruby vegas sinatra</code>
+  </pre>
+</div>
+
+
+<h1>Resque的使用</h1>
+
+<p>在resque中，我们一般把所要执行的任务放在一个perform的方法中，同时，得为该class或module定义一个实例参数@queue,这个实例
+参数，用来代表任务队列。并且，你可以任务命名它。下面，是一个简单的例子.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Archive</span>
+</span><span class='line'>  <span class="vi">@queue</span> <span class="o">=</span> <span class="ss">:file_serve</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">perform</span><span class="p">(</span><span class="n">repo_id</span><span class="p">,</span> <span class="n">branch</span> <span class="o">=</span> <span class="s1">&#39;master&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">repo</span> <span class="o">=</span> <span class="no">Repository</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">repo_id</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">repo</span><span class="o">.</span><span class="n">create_archive</span><span class="p">(</span><span class="n">branch</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这里，我们就将Archive的任务，放在了名叫file_serve的队列中了.如果，要将这个任务放在别的类中，我们需要调用Resque的enqueue方法，如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="k">class</span> <span class="nc">Repository</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">async_create_archive</span><span class="p">(</span><span class="n">branch</span><span class="p">)</span>
+</span><span class='line'>      <span class="no">Resque</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="no">Archive</span><span class="p">,</span><span class="nb">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="n">branch</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这样，我们就可以调用repo.async_create_archive(&#8216;master&#8217;)这样的方法在我们的程序中，执行这个，它就会创造一个job，并且将它放在file_serve的队列中。
+下面方法是用来执行file_serve队列上的任务的。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="no">QUEUE</span><span class="o">=</span><span class="n">file_serve</span> <span class="n">rake</span> <span class="n">resuqe</span><span class="ss">:work</span>
+</span><span class='line'>  <span class="c1">#我们也可以用*来代替file_serve,</span>
+</span><span class='line'>  <span class="c1">#用*表示运行所用的QUEUE</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h1>Resque Jobs</h1>
+
+<p>resque的jobs是以JSON对象的形式持久存在的。所以，perform方法里面的参数必须能用JSON 编码，例如，我们创建一个job</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="n">repo</span> <span class="o">=</span> <span class="no">Repository</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">repo</span><span class="o">.</span><span class="n">async_create_archive</span><span class="p">(</span><span class="s1">&#39;master&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>执行这个之后，就会有下面形式的JSON对象存在于file_server队列中:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="s1">&#39;class&#39;</span><span class="o">:</span><span class="s1">&#39;Archive&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s1">&#39;args&#39;</span> <span class="o">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="s1">&#39;master&#39;</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>所以，jobs只接受能被JSON化的参数。</p>
+
+<h1>Workers</h1>
+
+<p>Resque workers是一直执行的rake任务，它就像下面这样</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="n">start</span>
+</span><span class='line'>  <span class="kp">loop</span> <span class="k">do</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">job</span> <span class="o">=</span> <span class="n">reserve</span>
+</span><span class='line'>     <span class="n">job</span><span class="o">.</span><span class="n">process</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="nb">sleep</span> <span class="mi">5</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>  <span class="n">shutdown</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>如果，我们需要把resque以插件的形式安装在rails application中的时候，因为,它是不知道你的application环境的，所以，我们得先加载application 到内存
+中,所以，我们得这样。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="c1">#lib/tasks/resque.rake or Rakefile</span>
+</span><span class='line'>  <span class="nb">require</span> <span class="s1">&#39;resque/tasks&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">task</span> <span class="s2">&quot;resque:setup&quot;</span> <span class="o">=&gt;</span> <span class="ss">:environment</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>resque还支持对队列的优先级的处理，比如，这里有另外一个队列，warm_cache,我们利用下面的形式启动worker.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="nv">QUEUES</span><span class="o">=</span>file_serve,warm_cache rake resque:work
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>它就会首先，找file_serve队列中有没有相应的队列任务，如果没有了，它才会去处理warm_cache里面的jobs.</p>
+
+<p>同时执行多个队列任务</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="nv">COUNT</span><span class="o">=</span>5 <span class="nv">QUEUE</span><span class="o">=</span>* rake resque:workers
+</span><span class='line'>  <span class="c">#这个会启动五个相应的resque workers,每个都在一个独立的线程中。</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h1>Front End</h1>
+
+<p>另外，我们也可以很方便的通过web的形式查看队列任务的执行情况</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  resque-web -p 8282
+</span><span class='line'>  <span class="c">#或者加namespace</span>
+</span><span class='line'>  resque-web -p 8282 -N myapp
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h1>整合rails</h1>
+
+<p>首先配置redis</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">defaults</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">defaults</span>
+</span><span class='line'>  <span class="n">host</span><span class="p">:</span> <span class="n">localhost</span>
+</span><span class='line'>    <span class="n">port</span><span class="p">:</span> <span class="mi">6379</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">development</span><span class="p">:</span>
+</span><span class='line'>      <span class="o">&lt;&lt;</span><span class="p">:</span> <span class="o">*</span><span class="n">defaults</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nb">test</span><span class="p">:</span>
+</span><span class='line'>      <span class="o">&lt;&lt;</span><span class="p">:</span> <span class="o">*</span><span class="n">defaults</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">staging</span><span class="p">:</span>
+</span><span class='line'>      <span class="o">&lt;&lt;</span><span class="p">:</span> <span class="o">*</span><span class="n">defaults</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">production</span><span class="p">:</span>
+</span><span class='line'>      <span class="o">&lt;&lt;</span><span class="p">:</span> <span class="o">*</span><span class="n">defaults</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>初始化config/initializers/resuqe.rb</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="n">rails_root</span> <span class="o">=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;RAILS_ROOT&#39;</span><span class="o">]</span> <span class="o">||</span> <span class="no">File</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">__FILE__</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/../..&#39;</span>
+</span><span class='line'>  <span class="n">rails_env</span> <span class="o">=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;RAILS_ENV&#39;</span><span class="o">]</span> <span class="o">||</span> <span class="s1">&#39;development&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">resque_config</span> <span class="o">=</span> <span class="no">YAML</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">rails_root</span> <span class="o">+</span> <span class="s1">&#39;/config/resque.yml&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="no">Resque</span><span class="o">.</span><span class="n">redis</span> <span class="o">=</span> <span class="n">resque_config</span><span class="o">[</span><span class="n">rails_env</span><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h1>测试</h1>
+
+<p>在进行spec测试的时候，我们需要将resque任务立即执行，这时候，我们需要使用 <a href="https://github.com/leshill/resque_spec">resquespec</a>  这个gem
+包来完成，我们的工作，让resque_worker立即执行。主要用到的方法是with_resque();</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">liwh</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-31T00:00:00+08:00" pubdate data-updated="true">Mar 31<span>st</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/other/'>other</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liwh.github.com/blog/2011/03/31/introduce-redis-resque/" data-via="" data-counturl="http://liwh.github.com/blog/2011/03/31/introduce-redis-resque/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2011/03/29/rspec-view/" title="Previous Post: rspec test">&laquo; rspec test</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/03/31/often-use-cli/" title="next Post: 个人常用的shell">个人常用的shell &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2011/11/05/build-oauth2-provider/">build-oauth2-provider</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/09/28/introduce-active-admin-framework/">后台管理框架active_admin</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/">将rails项目升级到rails 3.1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/12/rails3-email-setup/">rails3中邮件服务设置</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/09/use-pow-for-railsapp/">使用pow作为rails server</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2011 - liwh -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liwh87';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

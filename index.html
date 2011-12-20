@@ -5,11 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>My Octopress Blog</title>
-  <meta name="author" content="Your Name">
+  <title>Code for fun</title>
+  <meta name="author" content="liwh">
 
   
-  <meta name="description" content=" Blog Archives Recent Posts ">
+  <meta name="description" content="introduce 最近，花了一段时间去整理oauth2.0 provider的功能，现在，很多互联网都是通过此方式共享API接口，
+例如，豆瓣，新浪等等。其特点是不需要用户在第三方应用中输入用户名、密码即可完成授权操作。现在最新版本是 draft-ietf-oauth-v2-22, &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -24,20 +25,30 @@
   <script src="/javascripts/modernizr-2.0.js"></script>
   <script src="/javascripts/ender.js"></script>
   <script src="/javascripts/octopress.js" type="text/javascript"></script>
-  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <link href="/atom.xml" rel="alternate" title="Code for fun" type="application/atom+xml">
   <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
 <link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 <link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 
   
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20088141-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
 
 </head>
 
 <body   >
   <header role="banner"><hgroup>
-  <h1><a href="/">My Octopress Blog</a></h1>
-  
-    <h2>A blogging framework for hackers.</h2>
+  <h1><a href="/">Code for fun</a></h1>
   
 </hgroup>
 
@@ -65,7 +76,1187 @@
       <div class="blog-index">
   
   
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/11/05/build-oauth2-provider/">Build-oauth2-provider</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-11-05T20:10:00+08:00" pubdate data-updated="true">Nov 5<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h3>introduce</h3>
+
+<p>最近，花了一段时间去整理oauth2.0 provider的功能，现在，很多互联网都是通过此方式共享API接口，
+例如，豆瓣，新浪等等。其特点是不需要用户在第三方应用中输入用户名、密码即可完成授权操作。现在最新版本是 <a href="http://tools.ietf.org/html/draft-ietf-oauth-v2-22">draft-ietf-oauth-v2-22</a>,具体流程可参考其文档。这里就不赘述其细节了，简单来说就是通过client_id和client_secret还有redirect_uri这几个参数，请求验证服务器的授权，然后通过返回一个可信任的access_token来调用服务器的资源。下面，介绍一下如何在rails 中实现这个流程。</p>
+
+<h3>实现</h3>
+
+<p>在github上查找了几个gem,  最终选定 <a href="https://github.com/songkick/oauth2-provider">oauth2-provider</a> ，下面介绍一下实现方式。</p>
+
+<p>首先，我们创建一个oauth_controller,添加下面代码</p>
+
+<figure class='code'><figcaption><span>oauth_controller.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">OauthController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">authorize</span> <span class="c1"># 返回authorize_code</span>
+</span><span class='line'>    <span class="vi">@oauth2</span> <span class="o">=</span> <span class="no">OAuth2</span><span class="o">::</span><span class="no">Provider</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">shop</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+</span><span class='line'>    <span class="c1">#response.headers = @oauth2.response_headers</span>
+</span><span class='line'>    <span class="c1">#response.status = @oauth2.response_status</span>
+</span><span class='line'>    <span class="n">redirect_to</span> <span class="vi">@oauth2</span><span class="o">.</span><span class="n">redirect_uri</span>  <span class="ow">and</span> <span class="k">return</span> <span class="k">if</span> <span class="vi">@oauth2</span><span class="o">.</span><span class="n">redirect?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">access_token</span> <span class="c1"># 返回access_token，记得返回值需为json</span>
+</span><span class='line'>    <span class="vi">@oauth2</span> <span class="o">=</span> <span class="no">OAuth2</span><span class="o">::</span><span class="no">Provider</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="kp">nil</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">render</span> <span class="n">json</span><span class="p">:</span> <span class="vi">@oauth2</span><span class="o">.</span><span class="n">response_body</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">allow</span>  <span class="c1">#用户授权</span>
+</span><span class='line'>    <span class="vi">@auth</span> <span class="o">=</span> <span class="no">OAuth2</span><span class="o">::</span><span class="no">Provider</span><span class="o">::</span><span class="no">Authorization</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">params</span><span class="o">[</span><span class="s1">&#39;allow&#39;</span><span class="o">]</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span>
+</span><span class='line'>      <span class="vi">@auth</span><span class="o">.</span><span class="n">grant_access!</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="vi">@auth</span><span class="o">.</span><span class="n">deny_access!</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>    <span class="n">redirect_to</span> <span class="vi">@auth</span><span class="o">.</span><span class="n">redirect_uri</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在config/routes.rb中添加下面路由</p>
+
+<figure class='code'><figcaption><span>config/routes.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'> <span class="n">get</span> <span class="s1">&#39;/oauth/authorize&#39;</span>    <span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="s1">&#39;oauth#authorize&#39;</span>   <span class="p">,</span> <span class="n">as</span><span class="p">:</span> <span class="ss">:authorize</span>
+</span><span class='line'> <span class="n">post</span> <span class="s1">&#39;/oauth/access_token&#39;</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="s1">&#39;oauth#access_token&#39;</span><span class="p">,</span> <span class="n">as</span><span class="p">:</span> <span class="ss">:access_token</span>
+</span><span class='line'> <span class="n">match</span> <span class="s1">&#39;/oauth/allow&#39;</span>      <span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="s1">&#39;oauth#allow&#39;</span>       <span class="p">,</span> <span class="n">as</span><span class="p">:</span> <span class="ss">:oauth_allow</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>现在来说，基本流程就定义清楚了。</p>
+
+<p>这时用户已经能通过如下方式请求授权了</p>
+
+<figure class='code'><figcaption><span>client_demo.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;oauth2&#39;</span>
+</span><span class='line'><span class="n">client</span> <span class="o">=</span> <span class="no">OAuth2</span><span class="o">::</span><span class="no">Client</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;client_id&#39;</span><span class="p">,</span> <span class="s1">&#39;client_secret&#39;</span><span class="p">,</span> <span class="ss">:site</span> <span class="o">=&gt;</span> <span class="s1">&#39;https://example.org&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">client</span><span class="o">.</span><span class="n">auth_code</span><span class="o">.</span><span class="n">authorize_url</span><span class="p">(</span><span class="ss">:redirect_uri</span> <span class="o">=&gt;</span> <span class="s1">&#39;http://localhost:8080/oauth2/callback&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="c1"># =&gt; &quot;https://example.org/oauth/authorization?response_type=code&amp;client_id=client_id&amp;redirect_uri=http://localhost:8080/oauth2/callback&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">token</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">auth_code</span><span class="o">.</span><span class="n">get_token</span><span class="p">(</span><span class="s1">&#39;authorization_code_value&#39;</span><span class="p">,</span> <span class="ss">:redirect_uri</span> <span class="o">=&gt;</span> <span class="s1">&#39;http://localhost:8080/oauth2/callback&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">response</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;/api/resource&#39;</span><span class="p">,</span> <span class="ss">:params</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="s1">&#39;query_foo&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;bar&#39;</span> <span class="p">})</span>
+</span><span class='line'><span class="n">response</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">name</span>
+</span><span class='line'><span class="c1"># =&gt; OAuth2::Response</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>过滤器</h3>
+
+<p>当然，这里在我们服务器上得加个过滤器，去验证用户是否是正确的。</p>
+
+<figure class='code'><figcaption><span>application_controller.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="k">def</span> <span class="nf">login_or_oauth_required</span>
+</span><span class='line'>    <span class="k">unless</span> <span class="n">session</span><span class="o">[</span><span class="ss">:shop</span><span class="o">]</span>
+</span><span class='line'>      <span class="n">token</span> <span class="o">=</span> <span class="no">OAuth2</span><span class="o">::</span><span class="no">Provider</span><span class="o">.</span><span class="n">access_token</span><span class="p">(</span><span class="kp">nil</span><span class="p">,</span> <span class="o">[]</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">unless</span> <span class="n">token</span><span class="o">.</span><span class="n">valid?</span>
+</span><span class='line'>          <span class="n">render</span> <span class="n">json</span><span class="p">:</span> <span class="p">{</span><span class="n">error</span><span class="p">:</span> <span class="s1">&#39;[API] Invalid API key or permission token (unrecognized login or wrong password)&#39;</span><span class="p">}</span>
+</span><span class='line'>        <span class="k">else</span>
+</span><span class='line'>          <span class="n">session</span><span class="o">[</span><span class="ss">:shop</span><span class="o">]</span> <span class="o">||=</span> <span class="n">token</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">as_json</span><span class="p">(</span><span class="n">only</span><span class="p">:</span> <span class="o">[</span><span class="ss">:deadline</span><span class="p">,</span> <span class="ss">:created_at</span><span class="p">,</span> <span class="ss">:updated_at</span><span class="p">,</span> <span class="ss">:name</span><span class="o">]</span><span class="p">)</span><span class="o">[</span><span class="s1">&#39;shop&#39;</span><span class="o">]</span>
+</span><span class='line'>        <span class="k">end</span>
+</span><span class='line'>     <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>参考资料</h3>
+
+<p><a href="http://developer.github.com/v3/oauth/">github-oauth2</a>
+<a href="http://wenku.baidu.com/view/b37ed7260722192e4536f66e.html">oauth2中文</a>
+<a href="http://oauth.net/2/">oauth2-spec</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/09/28/introduce-active-admin-framework/">后台管理框架active_admin</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-09-28T00:00:00+08:00" pubdate data-updated="true">Sep 28<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>简介</h2>
+
+<p>基于rails的管理框架还是很多的，例如,rails_admin, active_admin等。
+这里，介绍下最近使用的 <a href="https://github.com/gregbell/active_admin">active_admin</a></p>
+
+<h2>安装</h2>
+
+<p>在gemfile中添加</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  gem <span class="s1">&#39;activeadmin&#39;</span>
+</span><span class='line'>  gem <span class="s1">&#39;sass-rails&#39;</span> <span class="c">#only in rails 3.1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>装完对应的gem之后，执行下面task</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>   rails generate active_admin:install
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这里会创建对应的文件，主要是在routes中添加对应的路由，和active_admin的设置文件，还有，就是
+创建了对应的active_admin model,和对应的database migrate,在migrate中，创建了初始化的active_admin
+的记录admin@example.com,我们可以通过这个登录后台管理的页面。当然，在执行数据迁徙前，我们可以将
+这个改成我们所希望创建的默认用户。</p>
+
+<h2>使用</h2>
+
+<p>active_admin 创建的文件都放在app/admin这个目录下面。我们要想自定义首页显示的内容，可以查看dashboard文件，
+更改里面的内容就能直观的显示在首页上了。 如果，我们原来使用的控制器，定义了module Admin里，我们可以通过更改
+config/initializers/active_admin.rb这里面的配置，将config.default_namespace = :admin,换成我们所想要的，防止冲突。</p>
+
+<p>当我们要对某个表进行管理时，我们此时就可以通过创建对应的active_admin resource,执行下面命令，就可以创建对应的ActiveAdmin model了.
+执行完这个之后，在我们的后台中，会自动创建对应的增删改查功能。同样，我们可以自定义显示它，具体可以查看 <a href="http://activeadmin.info/docs/3-index-pages/index-as-table.html">资料</a></p>
+
+<h2>参考资料</h2>
+
+<p><a href="https://github.com/gregbell/active_admin.git">github gem</a>
+<a href="http://demo.activeadmin.info/admin">demo</a>
+<a href="http://rubydoc.info/github/gregbell/active_admin/master/frames">doc</a>
+<a href="http://activeadmin.info/">info</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/">将rails项目升级到rails 3.1</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-08-29T00:00:00+08:00" pubdate data-updated="true">Aug 29<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>有很久都没更新博客了，最近，发现很多东西不记下来，特别容易忘记。最近把项目从rails 3.0迁移
+到了3.1版本，rails 3.1增加了许多新的特性，比如说：默认支持coffee-script,把jQuery作为默认的js库
+等等，还有一些新特性,可以查看 <a href="http://guides.rubyonrails.org/3_1_release_notes.html">rails 3.1 release note</a> .</p>
+
+<h2>更新gem</h2>
+
+<p>比如说把原来的meta_where替换成squeel等等，基本上，现在版本的gem都支持rails 3.1了， 另外，原来的用于编译
+coffeescript的barista可以去掉了，因为默认rails模版已经支持编译coffeescript了。以前，默认的情况下，我们设置
+base=true这个配置，用来不让</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'>  <span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="p">...</span>
+</span><span class='line'>    <span class="p">}).</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>包围js代码，这样很多js变量就能全局性的用了。但是，现在rails ,默认是将bare设置为false的，这个可以看 <a href="https://github.com/rails/rails/issues/1125">rails的源码</a>  .在这种情况下，我们可以通过设置gloabla 变量，如window.xxx = xxx .
+这里有 <a href="http://stackoverflow.com/questions/5211638/pattern-for-coffeescript-modules/5212449#5212449">一些讨论</a> ,
+另外还有就是active_hash这个gem也做了一些改变， 当我们要实现activerecord和activehash对象关联时，得将原来的代码改写成：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Country</span> <span class="o">&lt;</span> <span class="no">ActiveHash</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Person</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="kp">extend</span> <span class="no">ActiveHash</span><span class="o">::</span><span class="no">Associations</span><span class="o">::</span><span class="no">ActiveRecordExtensions</span>
+</span><span class='line'>  <span class="n">belongs_to_active_hash</span> <span class="ss">:country</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>sprockets , asset pipline</h2>
+
+<p>这个应该是rails 3.1最主要的更新内容了。用asset pipline 替换了原有的？形式的引入文件， 利用的是 <a href="https://github.com/sstephenson/sprockets">sprockets gem</a>  .这个具体可以看 <a href="http://guides.rubyonrails.org/asset_pipeline.html">文章</a> ，这里面详细介绍了，用最新hash方式缓存静态文件。</p>
+
+<h2>subdomain, domain</h2>
+
+<p>现在rails url helper已经默认支持subdomain了，我们可以使用xxx_url(subdomian: xxx)</p>
+
+<h2>Http Steaming</h2>
+
+<p>HTTP Streaming是Rails 3.1中一项新改进，可以让浏览器在页面作出响应的同时下载样式表和JavaScript文件。该特性需要Ruby 1.9.2，以及Web服务器的支持，幸运的是流行的nginx和unicorn组合已经支持。</p>
+
+<h2>一些方法</h2>
+
+<p>在rails 3.1 的更新日志中，你会发现,clone方法发生了改变，我们以前用clone方法复制model,会是以下这种情况</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="nb">p</span> <span class="o">=</span> <span class="no">Product</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">clone</span>
+</span><span class='line'>  <span class="nb">p</span><span class="o">.</span><span class="n">new_record?</span> <span class="c1"># =&gt; true</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>而现在clone 之后的对象调用new_record?会返回false,即这是一种浅赋值，以下是changelog内容</p>
+
+<pre>
+1. ActiveRecord::Base#dup and ActiveRecord::Base#clone semantics have changed to closer match normal Ruby dup and clone semantics.
+
+1. Calling ActiveRecord::Base#clone will result in a shallow copy of the record, including copying the frozen state. No callbacks will be called.
+
+1. Calling ActiveRecord::Base#dup will duplicate the record, including calling after initialize hooks. Frozen state will not be copied, and all associations will be cleared. A duped record will return true for new_record?, have a nil id field, and is saveable.
+</pre>
+
+
+<p>另外，现在在query的时候，我们不能写以前的那种关联方式查询了，例如下面例子</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>   <span class="no">Shop</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">user</span><span class="p">:</span> <span class="no">User</span><span class="o">.</span><span class="n">first</span><span class="p">)</span>
+</span><span class='line'>   <span class="c1">#上面的话得换成</span>
+</span><span class='line'>   <span class="no">Shop</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="no">User</span><span class="o">.</span><span class="n">first</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>还有，现在通过association.new创建对象,等于以前的build方式创建对象了。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/06/12/rails3-email-setup/">Rails3中邮件服务设置</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-06-12T00:00:00+08:00" pubdate data-updated="true">Jun 12<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>对于一个web服务，邮件提醒是必须的，比如，发送给用户注册信息，密码重置信息等等，
+都需要通过邮件来提醒用户。这里简单介绍一下rails3的邮件服务设置。</p>
+
+<p>首先，我们得创建mailer</p>
+
+<div>
+  <pre>
+    <code class='bash'>rails g mailer UserMailer</code>
+  </pre>
+</div>
+
+
+<p>接着，我们编辑app/mailer/user_mailer</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="no">UserMailer</span> <span class="o">&lt;</span> <span class="no">ActionMailer</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'> <span class="n">default</span> <span class="ss">:from</span> <span class="o">=&gt;</span> <span class="s2">&quot;xxx@gmail.com&quot;</span>
+</span><span class='line'>
+</span><span class='line'>   <span class="k">def</span> <span class="nf">welcome</span>
+</span><span class='line'>     <span class="n">mail</span><span class="p">(</span><span class="n">to</span><span class="p">:</span> <span class="s2">&quot;xxx@gmail.com&quot;</span><span class="p">,</span><span class="n">body</span><span class="ss">:&quot;aaa&quot;</span><span class="p">,</span> <span class="n">subject</span><span class="p">:</span> <span class="s2">&quot;welcome&quot;</span><span class="p">)</span>
+</span><span class='line'>   <span class="k">end</span>
+</span><span class='line'> <span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>下一步，就是配置action mailer了,由于国内的gmail连接老出现问题，所以这里就介绍163的了，
+基本都差不多</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'> <span class="no">ActionMailer</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">smtp_settings</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>   <span class="ss">:address</span>              <span class="o">=&gt;</span> <span class="s2">&quot;smtp.163.com&quot;</span><span class="p">,</span>
+</span><span class='line'>   <span class="ss">:port</span>                 <span class="o">=&gt;</span>  <span class="mi">25</span><span class="p">,</span>
+</span><span class='line'>   <span class="ss">:domain</span>               <span class="o">=&gt;</span> <span class="s2">&quot;domail.com&quot;</span><span class="p">,</span>
+</span><span class='line'>   <span class="ss">:user_name</span>            <span class="o">=&gt;</span> <span class="s2">&quot;xxx@163.com&quot;</span><span class="p">,</span>
+</span><span class='line'>   <span class="ss">:password</span>             <span class="o">=&gt;</span> <span class="s2">&quot;xxx&quot;</span>
+</span><span class='line'>   <span class="ss">:authentication</span>       <span class="o">=&gt;</span> <span class="s2">&quot;plain&quot;</span><span class="p">,</span>
+</span><span class='line'>   <span class="c1">#if got the same error with me,please change the options false</span>
+</span><span class='line'>   <span class="ss">:enable_starttls_auto</span> <span class="o">=&gt;</span> <span class="kp">true</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="no">ActionMailer</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">default_url_options</span><span class="o">[</span><span class="ss">:host</span><span class="o">]</span> <span class="o">=</span> <span class="s2">&quot;localhost:3000&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>注意:如果你和我出现了同样的<a href="https://gist.github.com/1021285">堆栈错误</a></p>
+
+<p>这样，我们在rails console中执行 UserMailer.welcome.deliver就能发送邮件到指定的
+邮箱了。</p>
+
+<h2>参考资料</h2>
+
+<p><a href="http://guides.rubyonrails.org/action_mailer_basics.html">mail guides</a>
+<a href="http://asciicasts.com/episodes/206-action-mailer-in-rails-3">action mailer in rails 3</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/06/09/use-pow-for-railsapp/">使用pow作为rails Server</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-06-09T00:00:00+08:00" pubdate data-updated="true">Jun 9<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="https://github.com/37signals/pow">Pow</a> 是信号公司一个开源的rack-server,官方版本只支持Mac OS平台,它的主要有点是零配置，我们可以很方便的
+访问我们的app.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#安装直接使用下面这句就可以了</span>
+</span><span class='line'>  curl get.pow.cx|sh
+</span><span class='line'>  <span class="c">#只要下面简单的一句话，我们就可以将我们的app利用pow去运行了</span>
+</span><span class='line'>  <span class="c">#这样我们就能通过http://shop.dev去访问我们的项目了</span>
+</span><span class='line'>  <span class="nb">cd</span> ~/.pow <span class="o">&amp;&amp;</span> ln -s ~/workplace/shop
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>当我们使用rvm管理ruby版本的时候，我们需要在我们的项目中添加.rvmrc文件。
+<a href="http://beginrescueend.com/workflow/rvmrc/">具体参见</a> ，然后，创建对应的gemset之后，
+我们就可以访问了。</p>
+
+<p>Pow默认的日志文件是保存在~/Library/Logs/Pow/apps/#{app}.log 中的，app对应相应的程序。</p>
+
+<p>为了更方便的使用pow,我们可以使用 <a href="https://github.com/Rodreegez/powder">powder</a> 来操作pow.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/05/24/devise_update_without_password/">更新用户信息不提供密码(devise)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-05-24T00:00:00+08:00" pubdate data-updated="true">May 24<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>当我们使用devise的时候，我们要更新用户信息的时候，比如说，我们在form中提供了password 和password_confirmation的输入框,
+但是，我们希望更新用户信息的时候，如果不输入密码的时候，则不校验password.
+这时我们只需要将下面两句加在user.save的前面就行了。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="n">params</span><span class="o">[</span><span class="ss">:user</span><span class="o">].</span><span class="n">delete</span><span class="p">(</span><span class="ss">:password</span><span class="p">)</span> <span class="k">if</span> <span class="n">params</span><span class="o">[</span><span class="ss">:user</span><span class="o">][</span><span class="ss">:password</span><span class="o">].</span><span class="n">blank?</span>
+</span><span class='line'>  <span class="n">params</span><span class="o">[</span><span class="ss">:user</span><span class="o">].</span><span class="n">delete</span><span class="p">(</span><span class="ss">:password_confirmation</span><span class="p">)</span> <span class="k">if</span> <span class="n">params</span><span class="o">[</span><span class="ss">:user</span><span class="o">][</span><span class="ss">:password_confirmation</span><span class="o">].</span><span class="n">blank?</span> <span class="o">&amp;&amp;</span> <span class="n">params</span><span class="o">[</span><span class="ss">:user</span><span class="o">][</span><span class="ss">:password</span><span class="o">].</span><span class="n">blank?</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/04/02/reload-zsh/">Reload Zsh</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-04-02T00:00:00+08:00" pubdate data-updated="true">Apr 2<span>nd</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>由于zsh相对于bash来说，有些更好的功能。比如说补全功能等。但是，有个问题，
+在我们安装完 某个库，或者新增什么bin的时候，我们等新开terminal，才能重新
+加载它。这里，我们在zshrc里，定义 一个reload函数，这样，我们在新增什么函数，
+或者bin的时候，我们就不需要重启terminal，就能加载它了</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="k">function </span>reload<span class="o">()</span> <span class="o">{</span>
+</span><span class='line'> <span class="k">if</span> <span class="o">[[</span> <span class="s2">&quot;$#*&quot;</span> -eq 0 <span class="o">]]</span>; <span class="k">then</span>
+</span><span class='line'><span class="k">   </span><span class="nb">test</span> -r /etc/zsh/zsh-oli <span class="o">&amp;&amp;</span> . /etc/zsh/zsh-oli
+</span><span class='line'>   <span class="nb">test</span> -r ~/.zshrc <span class="o">&amp;&amp;</span> . ~/.zshrc
+</span><span class='line'>   <span class="k">return </span>0
+</span><span class='line'> <span class="k">else</span>
+</span><span class='line'><span class="k">   </span><span class="nb">local </span>fn
+</span><span class='line'>   <span class="k">for </span>fn in <span class="nv">$*</span>; <span class="k">do</span>
+</span><span class='line'><span class="k">     </span>unfunction <span class="nv">$fn</span>
+</span><span class='line'>     autoload -U <span class="nv">$fn</span>
+</span><span class='line'>     <span class="k">done</span>
+</span><span class='line'><span class="k">   fi</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/03/31/often-use-cli/">个人常用的shell</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-31T00:00:00+08:00" pubdate data-updated="true">Mar 31<span>st</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>这里记载自己项目开发一些常用的命令</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>   <span class="c">#运行resque后台任务</span>
+</span><span class='line'>   <span class="nv">QUEUE</span><span class="o">=</span>* <span class="nv">INTERVAL</span><span class="o">=</span>1 rake resque:work
+</span><span class='line'>   <span class="c">#查看resque任务的执行情况</span>
+</span><span class='line'>   resque-web -p 8282
+</span><span class='line'>   <span class="c">#重启unicorn</span>
+</span><span class='line'>   sudo sv restart unicorn-vagrant
+</span><span class='line'>   <span class="c">#查看unicorn日志</span>
+</span><span class='line'>   tail -f /etc/service/unicorn-vagrant/log/main/current
+</span><span class='line'>   <span class="c">#restart the nginx server</span>
+</span><span class='line'>   sudo /etc/init.d/nginx restart
+</span><span class='line'>   <span class="c">#restart the postgresql</span>
+</span><span class='line'>   <span class="c">#export PGDATA = &quot;/usr/local/var/postgres&quot;</span>
+</span><span class='line'>   pg_ctl restart
+</span><span class='line'>   <span class="k">for </span>i in <span class="sb">`</span>pidof postgres<span class="sb">`</span>; <span class="k">do </span><span class="nb">kill</span> -9 <span class="nv">$i</span> ; <span class="k">done</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/03/31/introduce-redis-resque/">Introduce the Resque Based on Redis</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-31T00:00:00+08:00" pubdate data-updated="true">Mar 31<span>st</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在项目中，很多时候，我们的代码都是从上到下依次执行的，就是说，
+得等到上面的任务完成之后，下面的任务才能执行， 但是，很多时候，
+当用户提交一个很耗时间的请求的时候，这时候，为了让用户不需要等待，
+去做别的事情，我们就得把 这些耗时间的任务放在后台执行了。用于后台
+任务执行的插件，在ruby中，是有不少数的，具体的，可以看下这篇文章
+<a href="https://github.com/blog/542-introducing-resque">introduceing resque</a> ,这里面介绍了几个后台任务执行的插件和
+resque的对比，resque是用于github平台的任务插件。</p>
+
+<p>Resque是一个基于redis的后台任务的Ruby库，将任务放在redis的多个队列中，并且待会执行它们。</p>
+
+<h1>安装</h1>
+
+<p>首先，由于它是基于redis的，所以，得先安装redis，resque则已gem的形式安装</p>
+
+<div>
+  <pre>
+    <code class='shell'>#install redis on osx
+  sudo brew install redis
+  gem install redis redis-namespace yajl-ruby vegas sinatra</code>
+  </pre>
+</div>
+
+
+<h1>Resque的使用</h1>
+
+<p>在resque中，我们一般把所要执行的任务放在一个perform的方法中，同时，得为该class或module定义一个实例参数@queue,这个实例
+参数，用来代表任务队列。并且，你可以任务命名它。下面，是一个简单的例子.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Archive</span>
+</span><span class='line'>  <span class="vi">@queue</span> <span class="o">=</span> <span class="ss">:file_serve</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">perform</span><span class="p">(</span><span class="n">repo_id</span><span class="p">,</span> <span class="n">branch</span> <span class="o">=</span> <span class="s1">&#39;master&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">repo</span> <span class="o">=</span> <span class="no">Repository</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">repo_id</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">repo</span><span class="o">.</span><span class="n">create_archive</span><span class="p">(</span><span class="n">branch</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这里，我们就将Archive的任务，放在了名叫file_serve的队列中了.如果，要将这个任务放在别的类中，我们需要调用Resque的enqueue方法，如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="k">class</span> <span class="nc">Repository</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">async_create_archive</span><span class="p">(</span><span class="n">branch</span><span class="p">)</span>
+</span><span class='line'>      <span class="no">Resque</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="no">Archive</span><span class="p">,</span><span class="nb">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="n">branch</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这样，我们就可以调用repo.async_create_archive(&#8216;master&#8217;)这样的方法在我们的程序中，执行这个，它就会创造一个job，并且将它放在file_serve的队列中。
+下面方法是用来执行file_serve队列上的任务的。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="no">QUEUE</span><span class="o">=</span><span class="n">file_serve</span> <span class="n">rake</span> <span class="n">resuqe</span><span class="ss">:work</span>
+</span><span class='line'>  <span class="c1">#我们也可以用*来代替file_serve,</span>
+</span><span class='line'>  <span class="c1">#用*表示运行所用的QUEUE</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h1>Resque Jobs</h1>
+
+<p>resque的jobs是以JSON对象的形式持久存在的。所以，perform方法里面的参数必须能用JSON 编码，例如，我们创建一个job</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="n">repo</span> <span class="o">=</span> <span class="no">Repository</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">repo</span><span class="o">.</span><span class="n">async_create_archive</span><span class="p">(</span><span class="s1">&#39;master&#39;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>执行这个之后，就会有下面形式的JSON对象存在于file_server队列中:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'>  <span class="p">{</span>
+</span><span class='line'>    <span class="s1">&#39;class&#39;</span><span class="o">:</span><span class="s1">&#39;Archive&#39;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s1">&#39;args&#39;</span> <span class="o">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="s1">&#39;master&#39;</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>所以，jobs只接受能被JSON化的参数。</p>
+
+<h1>Workers</h1>
+
+<p>Resque workers是一直执行的rake任务，它就像下面这样</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="n">start</span>
+</span><span class='line'>  <span class="kp">loop</span> <span class="k">do</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">job</span> <span class="o">=</span> <span class="n">reserve</span>
+</span><span class='line'>     <span class="n">job</span><span class="o">.</span><span class="n">process</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="nb">sleep</span> <span class="mi">5</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>  <span class="n">shutdown</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>如果，我们需要把resque以插件的形式安装在rails application中的时候，因为,它是不知道你的application环境的，所以，我们得先加载application 到内存
+中,所以，我们得这样。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="c1">#lib/tasks/resque.rake or Rakefile</span>
+</span><span class='line'>  <span class="nb">require</span> <span class="s1">&#39;resque/tasks&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">task</span> <span class="s2">&quot;resque:setup&quot;</span> <span class="o">=&gt;</span> <span class="ss">:environment</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>resque还支持对队列的优先级的处理，比如，这里有另外一个队列，warm_cache,我们利用下面的形式启动worker.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="nv">QUEUES</span><span class="o">=</span>file_serve,warm_cache rake resque:work
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>它就会首先，找file_serve队列中有没有相应的队列任务，如果没有了，它才会去处理warm_cache里面的jobs.</p>
+
+<p>同时执行多个队列任务</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="nv">COUNT</span><span class="o">=</span>5 <span class="nv">QUEUE</span><span class="o">=</span>* rake resque:workers
+</span><span class='line'>  <span class="c">#这个会启动五个相应的resque workers,每个都在一个独立的线程中。</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h1>Front End</h1>
+
+<p>另外，我们也可以很方便的通过web的形式查看队列任务的执行情况</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>  resque-web -p 8282
+</span><span class='line'>  <span class="c">#或者加namespace</span>
+</span><span class='line'>  resque-web -p 8282 -N myapp
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h1>整合rails</h1>
+
+<p>首先配置redis</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">defaults</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">defaults</span>
+</span><span class='line'>  <span class="n">host</span><span class="p">:</span> <span class="n">localhost</span>
+</span><span class='line'>    <span class="n">port</span><span class="p">:</span> <span class="mi">6379</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">development</span><span class="p">:</span>
+</span><span class='line'>      <span class="o">&lt;&lt;</span><span class="p">:</span> <span class="o">*</span><span class="n">defaults</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nb">test</span><span class="p">:</span>
+</span><span class='line'>      <span class="o">&lt;&lt;</span><span class="p">:</span> <span class="o">*</span><span class="n">defaults</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">staging</span><span class="p">:</span>
+</span><span class='line'>      <span class="o">&lt;&lt;</span><span class="p">:</span> <span class="o">*</span><span class="n">defaults</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">production</span><span class="p">:</span>
+</span><span class='line'>      <span class="o">&lt;&lt;</span><span class="p">:</span> <span class="o">*</span><span class="n">defaults</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>初始化config/initializers/resuqe.rb</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="n">rails_root</span> <span class="o">=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;RAILS_ROOT&#39;</span><span class="o">]</span> <span class="o">||</span> <span class="no">File</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">__FILE__</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/../..&#39;</span>
+</span><span class='line'>  <span class="n">rails_env</span> <span class="o">=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;RAILS_ENV&#39;</span><span class="o">]</span> <span class="o">||</span> <span class="s1">&#39;development&#39;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">resque_config</span> <span class="o">=</span> <span class="no">YAML</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">rails_root</span> <span class="o">+</span> <span class="s1">&#39;/config/resque.yml&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="no">Resque</span><span class="o">.</span><span class="n">redis</span> <span class="o">=</span> <span class="n">resque_config</span><span class="o">[</span><span class="n">rails_env</span><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h1>测试</h1>
+
+<p>在进行spec测试的时候，我们需要将resque任务立即执行，这时候，我们需要使用 <a href="https://github.com/leshill/resque_spec">resquespec</a>  这个gem
+包来完成，我们的工作，让resque_worker立即执行。主要用到的方法是with_resque();</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/03/29/rspec-view/">Rspec Test</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-29T00:00:00+08:00" pubdate data-updated="true">Mar 29<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>对于测试，我想它的作用，我就不说了。良好的测试可以快速的让我们了解到
+我们的程序是否写对，以及后面review时，可以检测会不会对以前的程序造成破会等等。
+每个语言都有相应的xunit框架，例如，java里就有 junit.Ruby有Test::Unit,这里，
+我们就不说xunit了，我们说说rspec. rspec 是一种ruby的测试dsl,比xunit更好读，且容易描述目的。
+不过，最近dhh是提倡使用Test::Unit测试的，可以看看 <a href="http://www.rubyinside.com/dhh-offended-by-rspec-debate-4610.html">dhh-offened-by-spec</a></p>
+
+<pre>
+  test case 依次执行各个test:
+    setup
+    exercise
+    verify
+    teardown
+</pre>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="mi">1</span><span class="o">.</span><span class="n">rspec</span><span class="err">写法</span>
+</span><span class='line'><span class="n">describe</span> <span class="no">Order</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">before</span> <span class="k">do</span>
+</span><span class='line'>    <span class="vi">@order</span> <span class="o">=</span> <span class="no">Order</span><span class="o">.</span><span class="n">new</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">context</span> <span class="s2">&quot;when initialized&quot;</span> <span class="k">do</span>
+</span><span class='line'>    <span class="c1"># @order.status.should == &quot;New&quot;</span>
+</span><span class='line'>    <span class="n">its</span><span class="p">(</span><span class="ss">:status</span><span class="p">){</span><span class="n">should</span> <span class="o">==</span> <span class="s2">&quot;New&quot;</span><span class="p">}</span>
+</span><span class='line'>    <span class="c1"># @order.amount.should == 0</span>
+</span><span class='line'>    <span class="n">its</span><span class="p">(</span><span class="ss">:amount</span><span class="p">){</span><span class="n">should</span> <span class="o">==</span> <span class="mi">0</span><span class="p">}</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>describe and context</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">describe</span> <span class="no">Order</span> <span class="k">do</span>
+</span><span class='line'>  <span class="c1">#通常开头用#表示是instace method,用.开头表示class method</span>
+</span><span class='line'>  <span class="n">describe</span> <span class="s2">&quot;#amount&quot;</span> <span class="k">do</span>
+</span><span class='line'>    <span class="c1">#通常用context来加入不同的情景</span>
+</span><span class='line'>    <span class="n">context</span> <span class="s2">&quot;when user is vip&quot;</span> <span class="k">do</span>
+</span><span class='line'>      <span class="c1">#测方法的不同分支</span>
+</span><span class='line'>      <span class="n">it</span> <span class="s2">&quot;should ..&quot;</span> <span class="k">do</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">it</span> <span class="s2">&quot;should ..&quot;</span> <span class="k">do</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">context</span> <span class="s2">&quot;when user is vip&quot;</span> <span class="k">do</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'><span class="mi">1</span><span class="o">.</span><span class="n">or</span>
+</span><span class='line'><span class="n">describe</span> <span class="s2">&quot;A Order&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="c1">#..</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>before and after</h2>
+
+<p>其实就是xunit的setup和teardown,其中before(:each)每段it之前执行，而before(:all)是整段describe执行一次,after相对应。</p>
+
+<h2>pending 用来列出打算要写的测试</h2>
+
+<h2>let(:name){exp}</h2>
+
+<p>这里一般用来取代before(:each)的,由于它是lazy并且是memoized所以能增加执行速度,当然也有非lazy的let!</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="mi">1</span><span class="o">.</span><span class="err">接上</span>
+</span><span class='line'><span class="n">context</span> <span class="s2">&quot;when user is vip&quot;</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">let</span><span class="p">(</span><span class="ss">:user</span><span class="p">){</span><span class="no">User</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">:is_vip</span> <span class="o">=&gt;</span><span class="kp">true</span><span class="p">)}</span>
+</span><span class='line'>  <span class="n">let</span><span class="p">(</span><span class="ss">:order</span><span class="p">){</span><span class="no">Order</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">:User</span> <span class="o">=&gt;</span><span class="n">user</span><span class="p">)}</span>
+</span><span class='line'>  <span class="n">it</span> <span class="s2">&quot;should ....&quot;</span> <span class="k">do</span>
+</span><span class='line'>    <span class="n">order</span><span class="o">.</span><span class="n">total</span> <span class="o">=</span> <span class="mi">200</span>
+</span><span class='line'>    <span class="n">order</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">should</span> <span class="o">==</span> <span class="mi">90000</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>should 还有很多方法</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">xxx</span><span class="o">.</span><span class="n">should</span> <span class="n">be_true</span>
+</span><span class='line'><span class="n">xxx</span><span class="o">.</span><span class="n">should</span> <span class="n">be_false</span>
+</span><span class='line'><span class="n">xxx</span><span class="o">.</span><span class="n">should</span> <span class="n">be_nil</span>
+</span><span class='line'><span class="mi">1</span><span class="o">.</span><span class="n">xxx</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">should</span> <span class="o">==</span> <span class="nb">Array</span>
+</span><span class='line'><span class="n">xxx</span><span class="o">.</span><span class="n">should</span> <span class="n">be_a_kind_of</span><span class="p">(</span><span class="nb">Array</span><span class="p">)</span>
+</span><span class='line'><span class="mi">1</span><span class="o">.</span><span class="n">be</span> <span class="err">开发的</span><span class="n">should</span>
+</span><span class='line'><span class="mi">1</span><span class="o">.</span><span class="n">xxx</span><span class="o">.</span><span class="n">empty?</span><span class="o">.</span><span class="n">should</span> <span class="o">===</span> <span class="kp">true</span>
+</span><span class='line'><span class="n">xxx</span><span class="o">.</span><span class="n">should</span> <span class="n">be_empty</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>输入格式</h2>
+
+<p>rspec filename.rb
+rspec filename.rb -fs 输出specdoc文件
+rspec filename.rb -fh 输入html文件</p>
+
+<h2>有用的rspec工具</h2>
+
+<p>autotest(continuoustesting)
+watchr
+rcov(查测试代码覆盖率)
+rspec-rails(factory_girl,shoulda)</p>
+
+<h2>注意</h2>
+
+<p>一个it一种测试目的
+一个错误一个问题
+测稳定的方法，这样，当我们变更method时，就不需要改大量的测试了,比如，当我们测第三方的方法时，我们可以把他抽象出来，这样，我们当换了其他的方法时，我们就不需要改测试了
+一般不测private method</p>
+
+<h2>参考资料</h2>
+
+<p><a href="https://github.com/dchelimsky/rspec">rspec</a>
+<a href="http://rspec.info">rspec info</a>
+<a href="http://railscasts.com/episodes/157-rspec-matchers-macros">railscast rspec</a></p>
+
+<div style="width:425px" id="__ss_7394497"> <strong style="display:block;margin:12px 0 4px"><a href="http://www.slideshare.net/ihower/rspec-7394497" title="RSpec 讓你愛上寫測試">RSpec 讓你愛上寫測試</a></strong> <object id="__sse7394497" width="425" height="355"> <param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=rspec-osdc-110326031940-phpapp01&stripped_title=rspec-7394497&userName=ihower" /> <param name="allowFullScreen" value="true"/> <param name="allowScriptAccess" value="always"/> <embed name="__sse7394497" src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=rspec-osdc-110326031940-phpapp01&stripped_title=rspec-7394497&userName=ihower" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="425" height="355"></embed> </object> <div style="padding:5px 0 12px"> View more <a href="http://www.slideshare.net/">presentations</a> from <a href="http://www.slideshare.net/ihower">Wen-Tien Chang</a> </div> </div>
+
+</div>
+  
+  
+
+
+    </article>
+  
   <div class="pagination">
+    
+      <a class="prev" href="/blog/page/2/">&larr; Older</a>
     
     <a href="/blog/archives">Blog Archives</a>
     
@@ -76,6 +1267,26 @@
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2011/11/05/build-oauth2-provider/">build-oauth2-provider</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/09/28/introduce-active-admin-framework/">后台管理框架active_admin</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/">将rails项目升级到rails 3.1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/12/rails3-email-setup/">rails3中邮件服务设置</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/09/use-pow-for-railsapp/">使用pow作为rails server</a>
+      </li>
     
   </ul>
 </section>
@@ -91,12 +1302,25 @@
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2011 - Your Name -
+  Copyright &copy; 2011 - liwh -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
 </footer>
   
+
+<script type="text/javascript">
+      var disqus_shortname = 'liwh87';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
 
 
 

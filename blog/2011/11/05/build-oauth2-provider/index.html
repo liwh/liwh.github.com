@@ -1,0 +1,373 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>build-oauth2-provider - Code for fun</title>
+  <meta name="author" content="liwh">
+
+  
+  <meta name="description" content="introduce 最近，花了一段时间去整理oauth2.0 provider的功能，现在，很多互联网都是通过此方式共享API接口，
+例如，豆瓣，新浪等等。其特点是不需要用户在第三方应用中输入用户名、密码即可完成授权操作。现在最新版本是 draft-ietf-oauth-v2-22, &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://liwh.github.com/blog/2011/11/05/build-oauth2-provider">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Code for fun" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20088141-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Code for fun</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liwh.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Build-oauth2-provider</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-11-05T20:10:00+08:00" pubdate data-updated="true">Nov 5<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h3>introduce</h3>
+
+<p>最近，花了一段时间去整理oauth2.0 provider的功能，现在，很多互联网都是通过此方式共享API接口，
+例如，豆瓣，新浪等等。其特点是不需要用户在第三方应用中输入用户名、密码即可完成授权操作。现在最新版本是 <a href="http://tools.ietf.org/html/draft-ietf-oauth-v2-22">draft-ietf-oauth-v2-22</a>,具体流程可参考其文档。这里就不赘述其细节了，简单来说就是通过client_id和client_secret还有redirect_uri这几个参数，请求验证服务器的授权，然后通过返回一个可信任的access_token来调用服务器的资源。下面，介绍一下如何在rails 中实现这个流程。</p>
+
+<h3>实现</h3>
+
+<p>在github上查找了几个gem,  最终选定 <a href="https://github.com/songkick/oauth2-provider">oauth2-provider</a> ，下面介绍一下实现方式。</p>
+
+<p>首先，我们创建一个oauth_controller,添加下面代码</p>
+
+<figure class='code'><figcaption><span>oauth_controller.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">OauthController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">authorize</span> <span class="c1"># 返回authorize_code</span>
+</span><span class='line'>    <span class="vi">@oauth2</span> <span class="o">=</span> <span class="no">OAuth2</span><span class="o">::</span><span class="no">Provider</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">shop</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+</span><span class='line'>    <span class="c1">#response.headers = @oauth2.response_headers</span>
+</span><span class='line'>    <span class="c1">#response.status = @oauth2.response_status</span>
+</span><span class='line'>    <span class="n">redirect_to</span> <span class="vi">@oauth2</span><span class="o">.</span><span class="n">redirect_uri</span>  <span class="ow">and</span> <span class="k">return</span> <span class="k">if</span> <span class="vi">@oauth2</span><span class="o">.</span><span class="n">redirect?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">access_token</span> <span class="c1"># 返回access_token，记得返回值需为json</span>
+</span><span class='line'>    <span class="vi">@oauth2</span> <span class="o">=</span> <span class="no">OAuth2</span><span class="o">::</span><span class="no">Provider</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="kp">nil</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">render</span> <span class="n">json</span><span class="p">:</span> <span class="vi">@oauth2</span><span class="o">.</span><span class="n">response_body</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">allow</span>  <span class="c1">#用户授权</span>
+</span><span class='line'>    <span class="vi">@auth</span> <span class="o">=</span> <span class="no">OAuth2</span><span class="o">::</span><span class="no">Provider</span><span class="o">::</span><span class="no">Authorization</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">params</span><span class="o">[</span><span class="s1">&#39;allow&#39;</span><span class="o">]</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span>
+</span><span class='line'>      <span class="vi">@auth</span><span class="o">.</span><span class="n">grant_access!</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="vi">@auth</span><span class="o">.</span><span class="n">deny_access!</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>    <span class="n">redirect_to</span> <span class="vi">@auth</span><span class="o">.</span><span class="n">redirect_uri</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在config/routes.rb中添加下面路由</p>
+
+<figure class='code'><figcaption><span>config/routes.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'> <span class="n">get</span> <span class="s1">&#39;/oauth/authorize&#39;</span>    <span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="s1">&#39;oauth#authorize&#39;</span>   <span class="p">,</span> <span class="n">as</span><span class="p">:</span> <span class="ss">:authorize</span>
+</span><span class='line'> <span class="n">post</span> <span class="s1">&#39;/oauth/access_token&#39;</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="s1">&#39;oauth#access_token&#39;</span><span class="p">,</span> <span class="n">as</span><span class="p">:</span> <span class="ss">:access_token</span>
+</span><span class='line'> <span class="n">match</span> <span class="s1">&#39;/oauth/allow&#39;</span>      <span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="s1">&#39;oauth#allow&#39;</span>       <span class="p">,</span> <span class="n">as</span><span class="p">:</span> <span class="ss">:oauth_allow</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>现在来说，基本流程就定义清楚了。</p>
+
+<p>这时用户已经能通过如下方式请求授权了</p>
+
+<figure class='code'><figcaption><span>client_demo.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;oauth2&#39;</span>
+</span><span class='line'><span class="n">client</span> <span class="o">=</span> <span class="no">OAuth2</span><span class="o">::</span><span class="no">Client</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;client_id&#39;</span><span class="p">,</span> <span class="s1">&#39;client_secret&#39;</span><span class="p">,</span> <span class="ss">:site</span> <span class="o">=&gt;</span> <span class="s1">&#39;https://example.org&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">client</span><span class="o">.</span><span class="n">auth_code</span><span class="o">.</span><span class="n">authorize_url</span><span class="p">(</span><span class="ss">:redirect_uri</span> <span class="o">=&gt;</span> <span class="s1">&#39;http://localhost:8080/oauth2/callback&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="c1"># =&gt; &quot;https://example.org/oauth/authorization?response_type=code&amp;client_id=client_id&amp;redirect_uri=http://localhost:8080/oauth2/callback&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">token</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">auth_code</span><span class="o">.</span><span class="n">get_token</span><span class="p">(</span><span class="s1">&#39;authorization_code_value&#39;</span><span class="p">,</span> <span class="ss">:redirect_uri</span> <span class="o">=&gt;</span> <span class="s1">&#39;http://localhost:8080/oauth2/callback&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="n">response</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;/api/resource&#39;</span><span class="p">,</span> <span class="ss">:params</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="s1">&#39;query_foo&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;bar&#39;</span> <span class="p">})</span>
+</span><span class='line'><span class="n">response</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">name</span>
+</span><span class='line'><span class="c1"># =&gt; OAuth2::Response</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>过滤器</h3>
+
+<p>当然，这里在我们服务器上得加个过滤器，去验证用户是否是正确的。</p>
+
+<figure class='code'><figcaption><span>application_controller.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="k">def</span> <span class="nf">login_or_oauth_required</span>
+</span><span class='line'>    <span class="k">unless</span> <span class="n">session</span><span class="o">[</span><span class="ss">:shop</span><span class="o">]</span>
+</span><span class='line'>      <span class="n">token</span> <span class="o">=</span> <span class="no">OAuth2</span><span class="o">::</span><span class="no">Provider</span><span class="o">.</span><span class="n">access_token</span><span class="p">(</span><span class="kp">nil</span><span class="p">,</span> <span class="o">[]</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">unless</span> <span class="n">token</span><span class="o">.</span><span class="n">valid?</span>
+</span><span class='line'>          <span class="n">render</span> <span class="n">json</span><span class="p">:</span> <span class="p">{</span><span class="n">error</span><span class="p">:</span> <span class="s1">&#39;[API] Invalid API key or permission token (unrecognized login or wrong password)&#39;</span><span class="p">}</span>
+</span><span class='line'>        <span class="k">else</span>
+</span><span class='line'>          <span class="n">session</span><span class="o">[</span><span class="ss">:shop</span><span class="o">]</span> <span class="o">||=</span> <span class="n">token</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">as_json</span><span class="p">(</span><span class="n">only</span><span class="p">:</span> <span class="o">[</span><span class="ss">:deadline</span><span class="p">,</span> <span class="ss">:created_at</span><span class="p">,</span> <span class="ss">:updated_at</span><span class="p">,</span> <span class="ss">:name</span><span class="o">]</span><span class="p">)</span><span class="o">[</span><span class="s1">&#39;shop&#39;</span><span class="o">]</span>
+</span><span class='line'>        <span class="k">end</span>
+</span><span class='line'>     <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>参考资料</h3>
+
+<p><a href="http://developer.github.com/v3/oauth/">github-oauth2</a>
+<a href="http://wenku.baidu.com/view/b37ed7260722192e4536f66e.html">oauth2中文</a>
+<a href="http://oauth.net/2/">oauth2-spec</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">liwh</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-11-05T20:10:00+08:00" pubdate data-updated="true">Nov 5<span>th</span>, 2011</time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liwh.github.com/blog/2011/11/05/build-oauth2-provider/" data-via="" data-counturl="http://liwh.github.com/blog/2011/11/05/build-oauth2-provider/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2011/09/28/introduce-active-admin-framework/" title="Previous Post: 后台管理框架active_admin">&laquo; 后台管理框架active_admin</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2011/11/05/build-oauth2-provider/">build-oauth2-provider</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/09/28/introduce-active-admin-framework/">后台管理框架active_admin</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/">将rails项目升级到rails 3.1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/12/rails3-email-setup/">rails3中邮件服务设置</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/09/use-pow-for-railsapp/">使用pow作为rails server</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2011 - liwh -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liwh87';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liwh.github.com/blog/2011/11/05/build-oauth2-provider/';
+        var disqus_url = 'http://liwh.github.com/blog/2011/11/05/build-oauth2-provider/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

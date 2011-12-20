@@ -1,0 +1,323 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Rake Tutorial - Code for fun</title>
+  <meta name="author" content="liwh">
+
+  
+  <meta name="description" content="我们在使用rails的过程中，经常都会用到rake,比如说执行rails数据库脚本的时候，
+我们用rake db:migrate等等。这里介绍下如何在rails中使用rake任务。 关于rake rake是一个构建任务的工具。rake任务可以完全用ruby代码写。具体可参见: jimweirich &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://liwh.github.com/blog/2010/12/16/rake-tutorial">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Code for fun" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20088141-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Code for fun</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liwh.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Rake Tutorial</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-16T00:00:00+08:00" pubdate data-updated="true">Dec 16<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>我们在使用rails的过程中，经常都会用到rake,比如说执行rails数据库脚本的时候，
+我们用rake db:migrate等等。这里介绍下如何在rails中使用rake任务。</p>
+
+<h2>关于rake</h2>
+
+<p>rake是一个构建任务的工具。rake任务可以完全用ruby代码写。具体可参见: <a href="https://github.com/jimweirich/rake">jimweirich</a></p>
+
+<h2>rake的用法</h2>
+
+<p>这里我们定义一个shell任务，生成一个文件，并向文件中写入helloworld.以rakefile的名字把下面代码保存在任意目录下。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">directory</span> <span class="s2">&quot;tmp&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">file</span> <span class="s2">&quot;hello.tmp&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;tmp&quot;</span> <span class="k">do</span>
+</span><span class='line'><span class="n">sh</span> <span class="s2">&quot;echo &#39;Hello&#39; &gt;&gt; &#39;tmp/hello.tmp&#39;&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这样我们执行它就会产生下面的效果</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">liweihui</span><span class="vi">@desktop</span><span class="ss">:~</span><span class="err">$</span> <span class="n">rake</span> <span class="n">hello</span><span class="o">.</span><span class="n">tmp</span>
+</span><span class='line'><span class="p">(</span><span class="k">in</span><span class="sr"> /home/</span><span class="n">liweihui</span><span class="p">)</span>
+</span><span class='line'><span class="n">mkdir</span> <span class="o">-</span><span class="nb">p</span> <span class="n">tmp</span>
+</span><span class='line'><span class="n">echo</span> <span class="s1">&#39;Hello&#39;</span> <span class="o">&gt;&gt;</span> <span class="s1">&#39;tmp/hello.tmp&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>利用rake写rails任务</h2>
+
+<p>在rails中，一般把rake 任务放在lib/tasks目录下，但必须以.rake的后缀保存,用于编写项目中一些自动化的功能.比如：我们要输出当前环境下数据库结构的当前版本。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">namespace</span> <span class="ss">:do</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">desc</span> <span class="s2">&quot;print the migration version&quot;</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:schema_version</span> <span class="o">=&gt;</span> <span class="ss">:environment</span> <span class="k">do</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">select_value</span><span class="p">(</span><span class="s1">&#39;select version from schema_info&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我们执行在terminal中执行 rake db:schema_version 就能输出版本结果了。其中namespace是用来定义命名空间的，我们可以将多个类似的任务放在一个namespace中，这也就是将任务进行分组.
+另外，我们还可以获取termial中的参数，来定义rake任务中变量的值。比如，我们执行rake db:rollback step=&#8230;就是这样的。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">desc</span> <span class="s2">&quot;Make coffee&quot;</span>
+</span><span class='line'><span class="n">task</span> <span class="ss">:make_coffee</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">cups</span> <span class="o">=</span> <span class="no">ENV</span><span class="o">[</span><span class="s2">&quot;COFFEE_CUPS&quot;</span><span class="o">]</span> <span class="o">||</span> <span class="mi">2</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="s2">&quot;Made </span><span class="si">#{</span><span class="n">cups</span><span class="si">}</span><span class="s2"> cups of coffee. Shakes are gone.&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这里我们就可以执行这样的命令rake &#8230; COFFEE_CUPS = 3 。</p>
+
+<h2>相关资料</h2>
+
+<p><a href="http://docs.rubyrake.org/">Rake document</a></p>
+
+<p><a href="http://jasonseifer.com/2010/04/06/rake-tutorial">Rake tutorila</a></p>
+
+<p><a href="http://railscasts.com/episodes/66-custom-rake-tasks">Custom Rake Tasks</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">liwh</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-16T00:00:00+08:00" pubdate data-updated="true">Dec 16<span>th</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/other/'>other</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liwh.github.com/blog/2010/12/16/rake-tutorial/" data-via="" data-counturl="http://liwh.github.com/blog/2010/12/16/rake-tutorial/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2010/12/08/study-resource/" title="Previous Post: Study Resource">&laquo; Study Resource</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2010/12/24/introduce-git/" title="next Post: git使用">git使用 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2011/11/05/build-oauth2-provider/">build-oauth2-provider</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/09/28/introduce-active-admin-framework/">后台管理框架active_admin</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/">将rails项目升级到rails 3.1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/12/rails3-email-setup/">rails3中邮件服务设置</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/09/use-pow-for-railsapp/">使用pow作为rails server</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2011 - liwh -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liwh87';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: other | Code for fun]]></title>
+  <link href="http://liwh.github.com/blog/categories/other/atom.xml" rel="self"/>
+  <link href="http://liwh.github.com/"/>
+  <updated>2011-12-20T22:10:36+08:00</updated>
+  <id>http://liwh.github.com/</id>
+  <author>
+    <name><![CDATA[liwh]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[后台管理框架active_admin]]></title>
+    <link href="http://liwh.github.com/blog/2011/09/28/introduce-active-admin-framework/"/>
+    <updated>2011-09-28T00:00:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2011/09/28/introduce-active-admin-framework</id>
+    <content type="html"><![CDATA[<h2>简介</h2>
+
+<p>基于rails的管理框架还是很多的，例如,rails_admin, active_admin等。
+这里，介绍下最近使用的 <a href="https://github.com/gregbell/active_admin">active_admin</a></p>
+
+<h2>安装</h2>
+
+<p>在gemfile中添加</p>
+
+<p><code>bash
+  gem 'activeadmin'
+  gem 'sass-rails' #only in rails 3.1
+</code></p>
+
+<p>装完对应的gem之后，执行下面task</p>
+
+<p><code>bash
+   rails generate active_admin:install
+</code></p>
+
+<p>这里会创建对应的文件，主要是在routes中添加对应的路由，和active_admin的设置文件，还有，就是
+创建了对应的active_admin model,和对应的database migrate,在migrate中，创建了初始化的active_admin
+的记录admin@example.com,我们可以通过这个登录后台管理的页面。当然，在执行数据迁徙前，我们可以将
+这个改成我们所希望创建的默认用户。</p>
+
+<h2>使用</h2>
+
+<p>active_admin 创建的文件都放在app/admin这个目录下面。我们要想自定义首页显示的内容，可以查看dashboard文件，
+更改里面的内容就能直观的显示在首页上了。 如果，我们原来使用的控制器，定义了module Admin里，我们可以通过更改
+config/initializers/active_admin.rb这里面的配置，将config.default_namespace = :admin,换成我们所想要的，防止冲突。</p>
+
+<p>当我们要对某个表进行管理时，我们此时就可以通过创建对应的active_admin resource,执行下面命令，就可以创建对应的ActiveAdmin model了.
+执行完这个之后，在我们的后台中，会自动创建对应的增删改查功能。同样，我们可以自定义显示它，具体可以查看 <a href="http://activeadmin.info/docs/3-index-pages/index-as-table.html">资料</a></p>
+
+<h2>参考资料</h2>
+
+<p><a href="https://github.com/gregbell/active_admin.git">github gem</a>
+<a href="http://demo.activeadmin.info/admin">demo</a>
+<a href="http://rubydoc.info/github/gregbell/active_admin/master/frames">doc</a>
+<a href="http://activeadmin.info/">info</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[将rails项目升级到rails 3.1]]></title>
+    <link href="http://liwh.github.com/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/"/>
+    <updated>2011-08-29T00:00:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1</id>
+    <content type="html"><![CDATA[<p>有很久都没更新博客了，最近，发现很多东西不记下来，特别容易忘记。最近把项目从rails 3.0迁移
+到了3.1版本，rails 3.1增加了许多新的特性，比如说：默认支持coffee-script,把jQuery作为默认的js库
+等等，还有一些新特性,可以查看 <a href="http://guides.rubyonrails.org/3_1_release_notes.html">rails 3.1 release note</a> .</p>
+
+<h2>更新gem</h2>
+
+<p>比如说把原来的meta_where替换成squeel等等，基本上，现在版本的gem都支持rails 3.1了， 另外，原来的用于编译
+coffeescript的barista可以去掉了，因为默认rails模版已经支持编译coffeescript了。以前，默认的情况下，我们设置
+base=true这个配置，用来不让</p>
+
+<p>```javascript
+  (function() {</p>
+
+<pre><code>...
+}).call(this);
+</code></pre>
+
+<p>```</p>
+
+<p>包围js代码，这样很多js变量就能全局性的用了。但是，现在rails ,默认是将bare设置为false的，这个可以看 <a href="https://github.com/rails/rails/issues/1125">rails的源码</a>  .在这种情况下，我们可以通过设置gloabla 变量，如window.xxx = xxx .
+这里有 <a href="http://stackoverflow.com/questions/5211638/pattern-for-coffeescript-modules/5212449#5212449">一些讨论</a> ,
+另外还有就是active_hash这个gem也做了一些改变， 当我们要实现activerecord和activehash对象关联时，得将原来的代码改写成：</p>
+
+<p>```ruby
+class Country &lt; ActiveHash::Base
+end</p>
+
+<p>class Person &lt; ActiveRecord::Base
+  extend ActiveHash::Associations::ActiveRecordExtensions
+  belongs_to_active_hash :country
+end
+```</p>
+
+<h2>sprockets , asset pipline</h2>
+
+<p>这个应该是rails 3.1最主要的更新内容了。用asset pipline 替换了原有的？形式的引入文件， 利用的是 <a href="https://github.com/sstephenson/sprockets">sprockets gem</a>  .这个具体可以看 <a href="http://guides.rubyonrails.org/asset_pipeline.html">文章</a> ，这里面详细介绍了，用最新hash方式缓存静态文件。</p>
+
+<h2>subdomain, domain</h2>
+
+<p>现在rails url helper已经默认支持subdomain了，我们可以使用xxx_url(subdomian: xxx)</p>
+
+<h2>Http Steaming</h2>
+
+<p>HTTP Streaming是Rails 3.1中一项新改进，可以让浏览器在页面作出响应的同时下载样式表和JavaScript文件。该特性需要Ruby 1.9.2，以及Web服务器的支持，幸运的是流行的nginx和unicorn组合已经支持。</p>
+
+<h2>一些方法</h2>
+
+<p>在rails 3.1 的更新日志中，你会发现,clone方法发生了改变，我们以前用clone方法复制model,会是以下这种情况</p>
+
+<p><code>ruby
+  p = Product.first.clone
+  p.new_record? # =&gt; true
+</code></p>
+
+<p>而现在clone 之后的对象调用new_record?会返回false,即这是一种浅赋值，以下是changelog内容</p>
+
+<pre>
+1. ActiveRecord::Base#dup and ActiveRecord::Base#clone semantics have changed to closer match normal Ruby dup and clone semantics.
+
+1. Calling ActiveRecord::Base#clone will result in a shallow copy of the record, including copying the frozen state. No callbacks will be called.
+
+1. Calling ActiveRecord::Base#dup will duplicate the record, including calling after initialize hooks. Frozen state will not be copied, and all associations will be cleared. A duped record will return true for new_record?, have a nil id field, and is saveable.
+</pre>
+
+
+<p>另外，现在在query的时候，我们不能写以前的那种关联方式查询了，例如下面例子</p>
+
+<p><code>ruby
+   Shop.where(user: User.first)
+   #上面的话得换成
+   Shop.where(user_id: User.first)
+</code></p>
+
+<p>还有，现在通过association.new创建对象,等于以前的build方式创建对象了。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[rails3中邮件服务设置]]></title>
+    <link href="http://liwh.github.com/blog/2011/06/12/rails3-email-setup/"/>
+    <updated>2011-06-12T00:00:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2011/06/12/rails3-email-setup</id>
+    <content type="html"><![CDATA[<p>对于一个web服务，邮件提醒是必须的，比如，发送给用户注册信息，密码重置信息等等，
+都需要通过邮件来提醒用户。这里简单介绍一下rails3的邮件服务设置。</p>
+
+<p>首先，我们得创建mailer</p>
+
+<p><div>
+  <pre>
+    <code class='bash'>rails g mailer UserMailer</code>
+  </pre>
+</div>
+</p>
+
+<p>接着，我们编辑app/mailer/user_mailer</p>
+
+<p>```ruby
+UserMailer &lt; ActionMailer::Base
+ default :from => "xxx@gmail.com"</p>
+
+<p>   def welcome</p>
+
+<pre><code> mail(to: "xxx@gmail.com",body:"aaa", subject: "welcome")
+</code></pre>
+
+<p>   end
+ end
+```</p>
+
+<p>下一步，就是配置action mailer了,由于国内的gmail连接老出现问题，所以这里就介绍163的了，
+基本都差不多</p>
+
+<p>```ruby
+ ActionMailer::Base.smtp_settings = {
+   :address              => "smtp.163.com",
+   :port                 =>  25,
+   :domain               => "domail.com",
+   :user_name            => "xxx@163.com",
+   :password             => "xxx"
+   :authentication       => "plain",
+   #if got the same error with me,please change the options false
+   :enable_starttls_auto => true
+  }
+ActionMailer::Base.default_url_options[:host] = "localhost:3000"</p>
+
+<p>```</p>
+
+<p>注意:如果你和我出现了同样的<a href="https://gist.github.com/1021285">堆栈错误</a></p>
+
+<p>这样，我们在rails console中执行 UserMailer.welcome.deliver就能发送邮件到指定的
+邮箱了。</p>
+
+<h2>参考资料</h2>
+
+<p><a href="http://guides.rubyonrails.org/action_mailer_basics.html">mail guides</a>
+<a href="http://asciicasts.com/episodes/206-action-mailer-in-rails-3">action mailer in rails 3</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[使用pow作为rails server]]></title>
+    <link href="http://liwh.github.com/blog/2011/06/09/use-pow-for-railsapp/"/>
+    <updated>2011-06-09T00:00:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2011/06/09/use-pow-for-railsapp</id>
+    <content type="html"><![CDATA[<p><a href="https://github.com/37signals/pow">Pow</a> 是信号公司一个开源的rack-server,官方版本只支持Mac OS平台,它的主要有点是零配置，我们可以很方便的
+访问我们的app.</p>
+
+<p><code>bash
+  #安装直接使用下面这句就可以了
+  curl get.pow.cx|sh
+  #只要下面简单的一句话，我们就可以将我们的app利用pow去运行了
+  #这样我们就能通过http://shop.dev去访问我们的项目了
+  cd ~/.pow &amp;&amp; ln -s ~/workplace/shop
+</code></p>
+
+<p>当我们使用rvm管理ruby版本的时候，我们需要在我们的项目中添加.rvmrc文件。
+<a href="http://beginrescueend.com/workflow/rvmrc/">具体参见</a> ，然后，创建对应的gemset之后，
+我们就可以访问了。</p>
+
+<p>Pow默认的日志文件是保存在~/Library/Logs/Pow/apps/#{app}.log 中的，app对应相应的程序。</p>
+
+<p>为了更方便的使用pow,我们可以使用 <a href="https://github.com/Rodreegez/powder">powder</a> 来操作pow.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[更新用户信息不提供密码(devise)]]></title>
+    <link href="http://liwh.github.com/blog/2011/05/24/devise_update_without_password/"/>
+    <updated>2011-05-24T00:00:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2011/05/24/devise_update_without_password</id>
+    <content type="html"><![CDATA[<p>当我们使用devise的时候，我们要更新用户信息的时候，比如说，我们在form中提供了password 和password_confirmation的输入框,
+但是，我们希望更新用户信息的时候，如果不输入密码的时候，则不校验password.
+这时我们只需要将下面两句加在user.save的前面就行了。</p>
+
+<p><code>ruby
+  params[:user].delete(:password) if params[:user][:password].blank?
+  params[:user].delete(:password_confirmation) if params[:user][:password_confirmation].blank? &amp;&amp; params[:user][:password].blank?
+</code></p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,329 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>将rails项目升级到rails 3.1 - Code for fun</title>
+  <meta name="author" content="liwh">
+
+  
+  <meta name="description" content="有很久都没更新博客了，最近，发现很多东西不记下来，特别容易忘记。最近把项目从rails 3.0迁移
+到了3.1版本，rails 3.1增加了许多新的特性，比如说：默认支持coffee-script,把jQuery作为默认的js库
+等等，还有一些新特性,可以查看 rails 3.1 release &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://liwh.github.com/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Code for fun" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20088141-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Code for fun</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liwh.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">将rails项目升级到rails 3.1</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-08-29T00:00:00+08:00" pubdate data-updated="true">Aug 29<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>有很久都没更新博客了，最近，发现很多东西不记下来，特别容易忘记。最近把项目从rails 3.0迁移
+到了3.1版本，rails 3.1增加了许多新的特性，比如说：默认支持coffee-script,把jQuery作为默认的js库
+等等，还有一些新特性,可以查看 <a href="http://guides.rubyonrails.org/3_1_release_notes.html">rails 3.1 release note</a> .</p>
+
+<h2>更新gem</h2>
+
+<p>比如说把原来的meta_where替换成squeel等等，基本上，现在版本的gem都支持rails 3.1了， 另外，原来的用于编译
+coffeescript的barista可以去掉了，因为默认rails模版已经支持编译coffeescript了。以前，默认的情况下，我们设置
+base=true这个配置，用来不让</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'>  <span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="p">...</span>
+</span><span class='line'>    <span class="p">}).</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>包围js代码，这样很多js变量就能全局性的用了。但是，现在rails ,默认是将bare设置为false的，这个可以看 <a href="https://github.com/rails/rails/issues/1125">rails的源码</a>  .在这种情况下，我们可以通过设置gloabla 变量，如window.xxx = xxx .
+这里有 <a href="http://stackoverflow.com/questions/5211638/pattern-for-coffeescript-modules/5212449#5212449">一些讨论</a> ,
+另外还有就是active_hash这个gem也做了一些改变， 当我们要实现activerecord和activehash对象关联时，得将原来的代码改写成：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Country</span> <span class="o">&lt;</span> <span class="no">ActiveHash</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Person</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="kp">extend</span> <span class="no">ActiveHash</span><span class="o">::</span><span class="no">Associations</span><span class="o">::</span><span class="no">ActiveRecordExtensions</span>
+</span><span class='line'>  <span class="n">belongs_to_active_hash</span> <span class="ss">:country</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>sprockets , asset pipline</h2>
+
+<p>这个应该是rails 3.1最主要的更新内容了。用asset pipline 替换了原有的？形式的引入文件， 利用的是 <a href="https://github.com/sstephenson/sprockets">sprockets gem</a>  .这个具体可以看 <a href="http://guides.rubyonrails.org/asset_pipeline.html">文章</a> ，这里面详细介绍了，用最新hash方式缓存静态文件。</p>
+
+<h2>subdomain, domain</h2>
+
+<p>现在rails url helper已经默认支持subdomain了，我们可以使用xxx_url(subdomian: xxx)</p>
+
+<h2>Http Steaming</h2>
+
+<p>HTTP Streaming是Rails 3.1中一项新改进，可以让浏览器在页面作出响应的同时下载样式表和JavaScript文件。该特性需要Ruby 1.9.2，以及Web服务器的支持，幸运的是流行的nginx和unicorn组合已经支持。</p>
+
+<h2>一些方法</h2>
+
+<p>在rails 3.1 的更新日志中，你会发现,clone方法发生了改变，我们以前用clone方法复制model,会是以下这种情况</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="nb">p</span> <span class="o">=</span> <span class="no">Product</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">clone</span>
+</span><span class='line'>  <span class="nb">p</span><span class="o">.</span><span class="n">new_record?</span> <span class="c1"># =&gt; true</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>而现在clone 之后的对象调用new_record?会返回false,即这是一种浅赋值，以下是changelog内容</p>
+
+<pre>
+1. ActiveRecord::Base#dup and ActiveRecord::Base#clone semantics have changed to closer match normal Ruby dup and clone semantics.
+
+1. Calling ActiveRecord::Base#clone will result in a shallow copy of the record, including copying the frozen state. No callbacks will be called.
+
+1. Calling ActiveRecord::Base#dup will duplicate the record, including calling after initialize hooks. Frozen state will not be copied, and all associations will be cleared. A duped record will return true for new_record?, have a nil id field, and is saveable.
+</pre>
+
+
+<p>另外，现在在query的时候，我们不能写以前的那种关联方式查询了，例如下面例子</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>   <span class="no">Shop</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">user</span><span class="p">:</span> <span class="no">User</span><span class="o">.</span><span class="n">first</span><span class="p">)</span>
+</span><span class='line'>   <span class="c1">#上面的话得换成</span>
+</span><span class='line'>   <span class="no">Shop</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="no">User</span><span class="o">.</span><span class="n">first</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>还有，现在通过association.new创建对象,等于以前的build方式创建对象了。</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">liwh</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-08-29T00:00:00+08:00" pubdate data-updated="true">Aug 29<span>th</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/other/'>other</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liwh.github.com/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/" data-via="" data-counturl="http://liwh.github.com/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2011/06/12/rails3-email-setup/" title="Previous Post: rails3中邮件服务设置">&laquo; rails3中邮件服务设置</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2011/09/28/introduce-active-admin-framework/" title="next Post: 后台管理框架active_admin">后台管理框架active_admin &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2011/11/05/build-oauth2-provider/">build-oauth2-provider</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/09/28/introduce-active-admin-framework/">后台管理框架active_admin</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/">将rails项目升级到rails 3.1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/12/rails3-email-setup/">rails3中邮件服务设置</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2011/06/09/use-pow-for-railsapp/">使用pow作为rails server</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2011 - liwh -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liwh87';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
