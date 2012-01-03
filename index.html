@@ -9,8 +9,8 @@
   <meta name="author" content="liwh">
 
   
-  <meta name="description" content="introduce 最近，花了一段时间去整理oauth2.0 provider的功能，现在，很多互联网都是通过此方式共享API接口，
-例如，豆瓣，新浪等等。其特点是不需要用户在第三方应用中输入用户名、密码即可完成授权操作。现在最新版本是 draft-ietf-oauth-v2-22, &hellip;">
+  <meta name="description" content="GCD是ios 4.0引入用于在应用程序中管理多个任务执行的技术。是C API的一部分。一般我们将其替代作为应用程序的多线程处理。
+GCD的函数一般以&#8221;dispatch_&#8221;开头，我们可以使用这个执行某些后台任务，然后返回处理主线程的代码。 例子 下面介绍一个例子， &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,88 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/01/03/ios-gcd/">GCD介绍</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-01-03T16:21:00+08:00" pubdate data-updated="true">Jan 3<span>rd</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>GCD是ios 4.0引入用于在应用程序中管理多个任务执行的技术。是C API的一部分。一般我们将其替代作为应用程序的多线程处理。
+GCD的函数一般以&#8221;dispatch_&#8221;开头，我们可以使用这个执行某些后台任务，然后返回处理主线程的代码。</p>
+
+<h4>例子</h4>
+
+<p>下面介绍一个例子，创建gcd队列下载图片:</p>
+
+<p>主要代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">viewWillAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="n">animated</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">tch_queue_t</span> <span class="n">downloadQueue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="err">“</span><span class="n">image</span> <span class="n">downloader</span><span class="err">”</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">dispatch_async</span><span class="p">(</span><span class="n">downloadQueue</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class='line'>      <span class="n">NSData</span> <span class="o">*</span><span class="n">imageData</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSData</span> <span class="nl">dataWithContentsOfURL:</span><span class="n">networkURL</span><span class="p">];</span>
+</span><span class='line'>      <span class="c1">//UIKit使用只能在main thread中</span>
+</span><span class='line'>      <span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="o">^</span><span class="p">{</span>
+</span><span class='line'>        <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIImage</span> <span class="nl">imageWithData:</span><span class="n">imageData</span><span class="p">];</span>
+</span><span class='line'>        <span class="n">self</span><span class="p">.</span><span class="n">imageView</span><span class="p">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">self</span><span class="p">.</span><span class="n">imageView</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">image</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">,</span> <span class="n">image</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">self</span><span class="p">.</span><span class="n">scrollView</span><span class="p">.</span><span class="n">contentSize</span> <span class="o">=</span> <span class="n">image</span><span class="p">.</span><span class="n">size</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">dispatch_release</span><span class="p">(</span><span class="n">downloadQueue</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>参考资料</h4>
+
+<p><a href="http://developer.apple.com/library/ios/#documentation/Performance/Reference/GCD_libdispatch_Ref/Reference/rexerence.html">GCD</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1045,216 +1127,6 @@ resque的对比，resque是用于github平台的任务插件。</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/03/29/rspec-view/">Rspec Test</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-03-29T00:00:00+08:00" pubdate data-updated="true">Mar 29<span>th</span>, 2011</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>对于测试，我想它的作用，我就不说了。良好的测试可以快速的让我们了解到
-我们的程序是否写对，以及后面review时，可以检测会不会对以前的程序造成破会等等。
-每个语言都有相应的xunit框架，例如，java里就有 junit.Ruby有Test::Unit,这里，
-我们就不说xunit了，我们说说rspec. rspec 是一种ruby的测试dsl,比xunit更好读，且容易描述目的。
-不过，最近dhh是提倡使用Test::Unit测试的，可以看看 <a href="http://www.rubyinside.com/dhh-offended-by-rspec-debate-4610.html">dhh-offened-by-spec</a></p>
-
-<pre>
-  test case 依次执行各个test:
-    setup
-    exercise
-    verify
-    teardown
-</pre>
-
-
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="mi">1</span><span class="o">.</span><span class="n">rspec</span><span class="err">写法</span>
-</span><span class='line'><span class="n">describe</span> <span class="no">Order</span> <span class="k">do</span>
-</span><span class='line'>  <span class="n">before</span> <span class="k">do</span>
-</span><span class='line'>    <span class="vi">@order</span> <span class="o">=</span> <span class="no">Order</span><span class="o">.</span><span class="n">new</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="n">context</span> <span class="s2">&quot;when initialized&quot;</span> <span class="k">do</span>
-</span><span class='line'>    <span class="c1"># @order.status.should == &quot;New&quot;</span>
-</span><span class='line'>    <span class="n">its</span><span class="p">(</span><span class="ss">:status</span><span class="p">){</span><span class="n">should</span> <span class="o">==</span> <span class="s2">&quot;New&quot;</span><span class="p">}</span>
-</span><span class='line'>    <span class="c1"># @order.amount.should == 0</span>
-</span><span class='line'>    <span class="n">its</span><span class="p">(</span><span class="ss">:amount</span><span class="p">){</span><span class="n">should</span> <span class="o">==</span> <span class="mi">0</span><span class="p">}</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>describe and context</h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">describe</span> <span class="no">Order</span> <span class="k">do</span>
-</span><span class='line'>  <span class="c1">#通常开头用#表示是instace method,用.开头表示class method</span>
-</span><span class='line'>  <span class="n">describe</span> <span class="s2">&quot;#amount&quot;</span> <span class="k">do</span>
-</span><span class='line'>    <span class="c1">#通常用context来加入不同的情景</span>
-</span><span class='line'>    <span class="n">context</span> <span class="s2">&quot;when user is vip&quot;</span> <span class="k">do</span>
-</span><span class='line'>      <span class="c1">#测方法的不同分支</span>
-</span><span class='line'>      <span class="n">it</span> <span class="s2">&quot;should ..&quot;</span> <span class="k">do</span>
-</span><span class='line'>      <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="n">it</span> <span class="s2">&quot;should ..&quot;</span> <span class="k">do</span>
-</span><span class='line'>      <span class="k">end</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">context</span> <span class="s2">&quot;when user is vip&quot;</span> <span class="k">do</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span><span class='line'><span class="mi">1</span><span class="o">.</span><span class="n">or</span>
-</span><span class='line'><span class="n">describe</span> <span class="s2">&quot;A Order&quot;</span> <span class="k">do</span>
-</span><span class='line'>  <span class="c1">#..</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>before and after</h2>
-
-<p>其实就是xunit的setup和teardown,其中before(:each)每段it之前执行，而before(:all)是整段describe执行一次,after相对应。</p>
-
-<h2>pending 用来列出打算要写的测试</h2>
-
-<h2>let(:name){exp}</h2>
-
-<p>这里一般用来取代before(:each)的,由于它是lazy并且是memoized所以能增加执行速度,当然也有非lazy的let!</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="mi">1</span><span class="o">.</span><span class="err">接上</span>
-</span><span class='line'><span class="n">context</span> <span class="s2">&quot;when user is vip&quot;</span> <span class="k">do</span>
-</span><span class='line'>  <span class="n">let</span><span class="p">(</span><span class="ss">:user</span><span class="p">){</span><span class="no">User</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">:is_vip</span> <span class="o">=&gt;</span><span class="kp">true</span><span class="p">)}</span>
-</span><span class='line'>  <span class="n">let</span><span class="p">(</span><span class="ss">:order</span><span class="p">){</span><span class="no">Order</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">:User</span> <span class="o">=&gt;</span><span class="n">user</span><span class="p">)}</span>
-</span><span class='line'>  <span class="n">it</span> <span class="s2">&quot;should ....&quot;</span> <span class="k">do</span>
-</span><span class='line'>    <span class="n">order</span><span class="o">.</span><span class="n">total</span> <span class="o">=</span> <span class="mi">200</span>
-</span><span class='line'>    <span class="n">order</span><span class="o">.</span><span class="n">amount</span><span class="o">.</span><span class="n">should</span> <span class="o">==</span> <span class="mi">90000</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>should 还有很多方法</h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">xxx</span><span class="o">.</span><span class="n">should</span> <span class="n">be_true</span>
-</span><span class='line'><span class="n">xxx</span><span class="o">.</span><span class="n">should</span> <span class="n">be_false</span>
-</span><span class='line'><span class="n">xxx</span><span class="o">.</span><span class="n">should</span> <span class="n">be_nil</span>
-</span><span class='line'><span class="mi">1</span><span class="o">.</span><span class="n">xxx</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">should</span> <span class="o">==</span> <span class="nb">Array</span>
-</span><span class='line'><span class="n">xxx</span><span class="o">.</span><span class="n">should</span> <span class="n">be_a_kind_of</span><span class="p">(</span><span class="nb">Array</span><span class="p">)</span>
-</span><span class='line'><span class="mi">1</span><span class="o">.</span><span class="n">be</span> <span class="err">开发的</span><span class="n">should</span>
-</span><span class='line'><span class="mi">1</span><span class="o">.</span><span class="n">xxx</span><span class="o">.</span><span class="n">empty?</span><span class="o">.</span><span class="n">should</span> <span class="o">===</span> <span class="kp">true</span>
-</span><span class='line'><span class="n">xxx</span><span class="o">.</span><span class="n">should</span> <span class="n">be_empty</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>输入格式</h2>
-
-<p>rspec filename.rb
-rspec filename.rb -fs 输出specdoc文件
-rspec filename.rb -fh 输入html文件</p>
-
-<h2>有用的rspec工具</h2>
-
-<p>autotest(continuoustesting)
-watchr
-rcov(查测试代码覆盖率)
-rspec-rails(factory_girl,shoulda)</p>
-
-<h2>注意</h2>
-
-<p>一个it一种测试目的
-一个错误一个问题
-测稳定的方法，这样，当我们变更method时，就不需要改大量的测试了,比如，当我们测第三方的方法时，我们可以把他抽象出来，这样，我们当换了其他的方法时，我们就不需要改测试了
-一般不测private method</p>
-
-<h2>参考资料</h2>
-
-<p><a href="https://github.com/dchelimsky/rspec">rspec</a>
-<a href="http://rspec.info">rspec info</a>
-<a href="http://railscasts.com/episodes/157-rspec-matchers-macros">railscast rspec</a></p>
-
-<div style="width:425px" id="__ss_7394497"> <strong style="display:block;margin:12px 0 4px"><a href="http://www.slideshare.net/ihower/rspec-7394497" title="RSpec 讓你愛上寫測試">RSpec 讓你愛上寫測試</a></strong> <object id="__sse7394497" width="425" height="355"> <param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=rspec-osdc-110326031940-phpapp01&stripped_title=rspec-7394497&userName=ihower" /> <param name="allowFullScreen" value="true"/> <param name="allowScriptAccess" value="always"/> <embed name="__sse7394497" src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=rspec-osdc-110326031940-phpapp01&stripped_title=rspec-7394497&userName=ihower" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="425" height="355"></embed> </object> <div style="padding:5px 0 12px"> View more <a href="http://www.slideshare.net/">presentations</a> from <a href="http://www.slideshare.net/ihower">Wen-Tien Chang</a> </div> </div>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -1268,6 +1140,10 @@ rspec-rails(factory_girl,shoulda)</p>
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/01/03/ios-gcd/">GCD介绍</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2011/11/05/build-oauth2-provider/">build-oauth2-provider</a>
@@ -1285,17 +1161,13 @@ rspec-rails(factory_girl,shoulda)</p>
         <a href="/blog/2011/06/12/rails3-email-setup/">rails3中邮件服务设置</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2011/06/09/use-pow-for-railsapp/">使用pow作为rails server</a>
-      </li>
-    
   </ul>
 </section>
 <section>
   <h1>About Me</h1>
   <ul id="about_me">
       <li class="post">
-         I am a developer using Ruby,Java and Cocoa!
+         I am a developer using Ruby,Java and obj-c!
       </li>
       <li class="post">
          <a href="http://about.me/weihuilee">About Me</a>

@@ -4,7 +4,7 @@
   <title><![CDATA[Code for fun]]></title>
   <link href="http://liwh.github.com/atom.xml" rel="self"/>
   <link href="http://liwh.github.com/"/>
-  <updated>2012-01-02T19:04:03+08:00</updated>
+  <updated>2012-01-03T16:42:54+08:00</updated>
   <id>http://liwh.github.com/</id>
   <author>
     <name><![CDATA[liwh]]></name>
@@ -12,6 +12,61 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[GCD介绍]]></title>
+    <link href="http://liwh.github.com/blog/2012/01/03/ios-gcd/"/>
+    <updated>2012-01-03T16:21:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2012/01/03/ios-gcd</id>
+    <content type="html"><![CDATA[<p>GCD是ios 4.0引入用于在应用程序中管理多个任务执行的技术。是C API的一部分。一般我们将其替代作为应用程序的多线程处理。
+GCD的函数一般以&#8221;dispatch_&#8221;开头，我们可以使用这个执行某些后台任务，然后返回处理主线程的代码。</p>
+
+<h4>例子</h4>
+
+<p>下面介绍一个例子，创建gcd队列下载图片:</p>
+
+<p>主要代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">viewWillAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="n">animated</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">tch_queue_t</span> <span class="n">downloadQueue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="err">“</span><span class="n">image</span> <span class="n">downloader</span><span class="err">”</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">dispatch_async</span><span class="p">(</span><span class="n">downloadQueue</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class='line'>      <span class="n">NSData</span> <span class="o">*</span><span class="n">imageData</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSData</span> <span class="nl">dataWithContentsOfURL:</span><span class="n">networkURL</span><span class="p">];</span>
+</span><span class='line'>      <span class="c1">//UIKit使用只能在main thread中</span>
+</span><span class='line'>      <span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="o">^</span><span class="p">{</span>
+</span><span class='line'>        <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIImage</span> <span class="nl">imageWithData:</span><span class="n">imageData</span><span class="p">];</span>
+</span><span class='line'>        <span class="n">self</span><span class="p">.</span><span class="n">imageView</span><span class="p">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">self</span><span class="p">.</span><span class="n">imageView</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">image</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">,</span> <span class="n">image</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">self</span><span class="p">.</span><span class="n">scrollView</span><span class="p">.</span><span class="n">contentSize</span> <span class="o">=</span> <span class="n">image</span><span class="p">.</span><span class="n">size</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">dispatch_release</span><span class="p">(</span><span class="n">downloadQueue</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>参考资料</h4>
+
+<p><a href="http://developer.apple.com/library/ios/#documentation/Performance/Reference/GCD_libdispatch_Ref/Reference/rexerence.html">GCD</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[build-oauth2-provider]]></title>

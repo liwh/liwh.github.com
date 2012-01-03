@@ -5,24 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>个人常用的shell - Code for fun</title>
+  <title>GCD介绍 - Code for fun</title>
   <meta name="author" content="liwh">
 
   
-  <meta name="description" content="这里记载自己项目开发一些常用的命令 1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14 #运行resque后台任务 QUEUE=* INTERVAL=1 rake resque:work #查看resque任务的执行情况 resque-web -p 8282 #重启unicorn &hellip;">
+  <meta name="description" content="GCD是ios 4.0引入用于在应用程序中管理多个任务执行的技术。是C API的一部分。一般我们将其替代作为应用程序的多线程处理。
+GCD的函数一般以&#8221;dispatch_&#8221;开头，我们可以使用这个执行某些后台任务，然后返回处理主线程的代码。 例子 下面介绍一个例子， &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -31,7 +19,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://liwh.github.com/blog/2011/03/31/often-use-cli">
+  <link rel="canonical" href="http://liwh.github.com/blog/2012/01/03/ios-gcd">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -91,7 +79,7 @@
   
   <header>
     
-      <h1 class="entry-title">个人常用的shell</h1>
+      <h1 class="entry-title">GCD介绍</h1>
     
     
       <p class="meta">
@@ -107,14 +95,21 @@
   
 
 
-<time datetime="2011-03-31T00:00:00+08:00" pubdate data-updated="true">Mar 31<span>st</span>, 2011</time>
+<time datetime="2012-01-03T16:21:00+08:00" pubdate data-updated="true">Jan 3<span>rd</span>, 2012</time>
         
       </p>
     
   </header>
 
 
-<div class="entry-content"><p>这里记载自己项目开发一些常用的命令</p>
+<div class="entry-content"><p>GCD是ios 4.0引入用于在应用程序中管理多个任务执行的技术。是C API的一部分。一般我们将其替代作为应用程序的多线程处理。
+GCD的函数一般以&#8221;dispatch_&#8221;开头，我们可以使用这个执行某些后台任务，然后返回处理主线程的代码。</p>
+
+<h4>例子</h4>
+
+<p>下面介绍一个例子，创建gcd队列下载图片:</p>
+
+<p>主要代码：</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -130,22 +125,30 @@
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
 <span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>   <span class="c">#运行resque后台任务</span>
-</span><span class='line'>   <span class="nv">QUEUE</span><span class="o">=</span>* <span class="nv">INTERVAL</span><span class="o">=</span>1 rake resque:work
-</span><span class='line'>   <span class="c">#查看resque任务的执行情况</span>
-</span><span class='line'>   resque-web -p 8282
-</span><span class='line'>   <span class="c">#重启unicorn</span>
-</span><span class='line'>   sudo sv restart unicorn-vagrant
-</span><span class='line'>   <span class="c">#查看unicorn日志</span>
-</span><span class='line'>   tail -f /etc/service/unicorn-vagrant/log/main/current
-</span><span class='line'>   <span class="c">#restart the nginx server</span>
-</span><span class='line'>   sudo /etc/init.d/nginx restart
-</span><span class='line'>   <span class="c">#restart the postgresql</span>
-</span><span class='line'>   <span class="c">#export PGDATA = &quot;/usr/local/var/postgres&quot;</span>
-</span><span class='line'>   pg_ctl restart
-</span><span class='line'>   <span class="k">for </span>i in <span class="sb">`</span>pidof postgres<span class="sb">`</span>; <span class="k">do </span><span class="nb">kill</span> -9 <span class="nv">$i</span> ; <span class="k">done</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">viewWillAppear:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="n">animated</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">tch_queue_t</span> <span class="n">downloadQueue</span> <span class="o">=</span> <span class="n">dispatch_queue_create</span><span class="p">(</span><span class="err">“</span><span class="n">image</span> <span class="n">downloader</span><span class="err">”</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">dispatch_async</span><span class="p">(</span><span class="n">downloadQueue</span><span class="p">,</span> <span class="o">^</span><span class="p">{</span>
+</span><span class='line'>      <span class="n">NSData</span> <span class="o">*</span><span class="n">imageData</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSData</span> <span class="nl">dataWithContentsOfURL:</span><span class="n">networkURL</span><span class="p">];</span>
+</span><span class='line'>      <span class="c1">//UIKit使用只能在main thread中</span>
+</span><span class='line'>      <span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">(),</span> <span class="o">^</span><span class="p">{</span>
+</span><span class='line'>        <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIImage</span> <span class="nl">imageWithData:</span><span class="n">imageData</span><span class="p">];</span>
+</span><span class='line'>        <span class="n">self</span><span class="p">.</span><span class="n">imageView</span><span class="p">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">self</span><span class="p">.</span><span class="n">imageView</span><span class="p">.</span><span class="n">frame</span> <span class="o">=</span> <span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">image</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">,</span> <span class="n">image</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">self</span><span class="p">.</span><span class="n">scrollView</span><span class="p">.</span><span class="n">contentSize</span> <span class="o">=</span> <span class="n">image</span><span class="p">.</span><span class="n">size</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>      <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">dispatch_release</span><span class="p">(</span><span class="n">downloadQueue</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
+
+<h4>参考资料</h4>
+
+<p><a href="http://developer.apple.com/library/ios/#documentation/Performance/Reference/GCD_libdispatch_Ref/Reference/rexerence.html">GCD</a></p>
 </div>
 
 
@@ -168,12 +171,12 @@
   
 
 
-<time datetime="2011-03-31T00:00:00+08:00" pubdate data-updated="true">Mar 31<span>st</span>, 2011</time>
+<time datetime="2012-01-03T16:21:00+08:00" pubdate data-updated="true">Jan 3<span>rd</span>, 2012</time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/other/'>other</a>
+    <a class='category' href='/blog/categories/ios/'>ios</a>
   
 </span>
 
@@ -182,7 +185,7 @@
     
       <div class="sharing">
   
-  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liwh.github.com/blog/2011/03/31/often-use-cli/" data-via="" data-counturl="http://liwh.github.com/blog/2011/03/31/often-use-cli/" >Tweet</a>
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liwh.github.com/blog/2012/01/03/ios-gcd/" data-via="" data-counturl="http://liwh.github.com/blog/2012/01/03/ios-gcd/" >Tweet</a>
   
   
   
@@ -191,14 +194,18 @@
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2011/03/31/introduce-redis-resque/" title="Previous Post: introduce the resque based on redis">&laquo; introduce the resque based on redis</a>
+        <a class="basic-alignment left" href="/blog/2011/11/05/build-oauth2-provider/" title="Previous Post: build-oauth2-provider">&laquo; build-oauth2-provider</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2011/04/02/reload-zsh/" title="next Post: reload zsh">reload zsh &raquo;</a>
       
     </p>
   </footer>
 </article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
 
 </div>
 
@@ -271,7 +278,10 @@
       var disqus_shortname = 'liwh87';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liwh.github.com/blog/2012/01/03/ios-gcd/';
+        var disqus_url = 'http://liwh.github.com/blog/2012/01/03/ios-gcd/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
