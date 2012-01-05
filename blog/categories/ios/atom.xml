@@ -4,7 +4,7 @@
   <title><![CDATA[Category: ios | Code for fun]]></title>
   <link href="http://liwh.github.com/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://liwh.github.com/"/>
-  <updated>2012-01-03T16:42:54+08:00</updated>
+  <updated>2012-01-06T00:14:52+08:00</updated>
   <id>http://liwh.github.com/</id>
   <author>
     <name><![CDATA[liwh]]></name>
@@ -12,6 +12,47 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[how-to-draw-circle]]></title>
+    <link href="http://liwh.github.com/blog/2012/01/06/how-to-draw-circle/"/>
+    <updated>2012-01-06T00:07:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2012/01/06/how-to-draw-circle</id>
+    <content type="html"><![CDATA[<p>这里介绍，如何实现在UIView中画圆，下面是主要代码：</p>
+
+<p>```obj-c
+-(void)drawCircleAtPoint:(CGPoint)p withRadius:(CGFloat)radius inContext:(CGContextRef)context
+{</p>
+
+<pre><code>UIGraphicsPushContext(context);
+CGContextBeginPath(context);
+CGContextAddArc(context, p.x, p.y, radius, 0, 2*M_PI, YES);
+CGContextStrokePath(context);
+UIGraphicsPopContext();
+</code></pre>
+
+<p>}</p>
+
+<ul>
+<li><p>(void)drawRect:(CGRect)rect
+{
+  // Drawing code
+  CGContextRef context = UIGraphicsGetCurrentContext();
+  CGPoint midPoint;
+  midPoint.x = self.bounds.origin.x + self.bounds.size.width / 2 ;
+  midPoint.y = self.bounds.origin.y + self.bounds.size.height / 2 ;
+  CGFloat size = self.bounds.size.width / 2;
+  if (self.bounds.size.height &lt; self.bounds.size.width) size = self.bounds.size.height / 2 ;</p>
+
+<p>  CGContextSetLineWidth(context, 5.0);
+  [[UIColor redColor] setStroke];
+  [self drawCircleAtPoint:midPoint withRadius:size inContext:context];
+｝
+```</p></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[GCD介绍]]></title>

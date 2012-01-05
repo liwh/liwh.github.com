@@ -4,7 +4,7 @@
   <title><![CDATA[Code for fun]]></title>
   <link href="http://liwh.github.com/atom.xml" rel="self"/>
   <link href="http://liwh.github.com/"/>
-  <updated>2012-01-03T16:42:54+08:00</updated>
+  <updated>2012-01-06T00:14:52+08:00</updated>
   <id>http://liwh.github.com/</id>
   <author>
     <name><![CDATA[liwh]]></name>
@@ -12,6 +12,64 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[how-to-draw-circle]]></title>
+    <link href="http://liwh.github.com/blog/2012/01/06/how-to-draw-circle/"/>
+    <updated>2012-01-06T00:07:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2012/01/06/how-to-draw-circle</id>
+    <content type="html"><![CDATA[<p>这里介绍，如何实现在UIView中画圆，下面是主要代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">drawCircleAtPoint:</span><span class="p">(</span><span class="n">CGPoint</span><span class="p">)</span><span class="n">p</span> <span class="nl">withRadius:</span><span class="p">(</span><span class="n">CGFloat</span><span class="p">)</span><span class="n">radius</span> <span class="nl">inContext:</span><span class="p">(</span><span class="n">CGContextRef</span><span class="p">)</span><span class="n">context</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">UIGraphicsPushContext</span><span class="p">(</span><span class="n">context</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">CGContextBeginPath</span><span class="p">(</span><span class="n">context</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">CGContextAddArc</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">p</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">p</span><span class="p">.</span><span class="n">y</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">M_PI</span><span class="p">,</span> <span class="n">YES</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">CGContextStrokePath</span><span class="p">(</span><span class="n">context</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">UIGraphicsPopContext</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">drawRect:</span><span class="p">(</span><span class="n">CGRect</span><span class="p">)</span><span class="n">rect</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="c1">// Drawing code</span>
+</span><span class='line'>    <span class="n">CGContextRef</span> <span class="n">context</span> <span class="o">=</span> <span class="n">UIGraphicsGetCurrentContext</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">CGPoint</span> <span class="n">midPoint</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">midPoint</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">;</span>
+</span><span class='line'>    <span class="n">midPoint</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">;</span>
+</span><span class='line'>    <span class="n">CGFloat</span> <span class="n">size</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">&lt;</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">)</span> <span class="n">size</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">CGContextSetLineWidth</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">[[</span><span class="n">UIColor</span> <span class="n">redColor</span><span class="p">]</span> <span class="n">setStroke</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">self</span> <span class="nl">drawCircleAtPoint:</span><span class="n">midPoint</span> <span class="nl">withRadius:</span><span class="n">size</span> <span class="nl">inContext:</span><span class="n">context</span><span class="p">];</span>
+</span><span class='line'><span class="err">｝</span>
+</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[GCD介绍]]></title>
@@ -1620,95 +1678,6 @@ opt + cmd + . :自动增加html close tag</p>
 
 <p><a href="http://www.javaeye.com/news/16677-mongodb">MongoDB入门学习资料</a>
 <a href="http://www.markus-gattol.name/ws/mongodb.html">Details for mongodb</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[jQuery常用插件]]></title>
-    <link href="http://liwh.github.com/blog/2009/09/12/jquery-plugin/"/>
-    <updated>2009-09-12T00:00:00+08:00</updated>
-    <id>http://liwh.github.com/blog/2009/09/12/jquery-plugin</id>
-    <content type="html"><![CDATA[<p>jQuery的简洁高效，越来越受到程序员的欢迎了
-这里介绍我使用过的jQuery插件</p>
-
-<h2>jrails</h2>
-
-<p>jrails不算是一个jquery的插件，而是一个js适配器
-用于将rails自带的js框架prototype，无缝地替换为jQuery
-强烈推荐使用
-<a href="http://ennerchi.com/projects/jrails">project</a></p>
-
-<h2>facebox</h2>
-
-<p>实现lightbox功能
-<a href="http://plugins.jquery.com/project/facebox">project</a>
-手动处理：修正跟blueprintcss框架冲突导致facebox边框显示重叠的问题
-<a href="http://famspam.com/facebox/">demo</a></p>
-
-<h2>times</h2>
-
-<p>定时器
-<a href="http://plugins.jquery.com/project/timers">project</a>
-<a href="http://jquery.offput.ca/timers/">demo</a></p>
-
-<h2>tooltip</h2>
-
-<p>title属性指定指示信息显得有点简陋了，用tooltip实现Div层提示
-手动处理：修正在firefox下提示层定位不准的问题
-<a href="http://flowplayer.org/tools/index.html">project</a>
-<a href="http://flowplayer.org/tools/tooltip.html">demo</a></p>
-
-<h2>easy slider</h2>
-
-<p>内容较大(多行)的情况下，实现滚动显示内容
-手动处理：增加了鼠标移入时暂停滚动，修正滚动至最后一项后不能平滑过渡到第一项的问题
-<a href="http://cssglobe.com/post/5780/easy-slider-17-numeric-navigation-jquery-slider">project</a>
-<a href="http://cssglobe.com/lab/easyslider1.7/03.html">demo</a></p>
-
-<h2>Jcrop</h2>
-
-<p>用于框选图片中的区域，以实现定位或对图片进行裁剪
-<a href="http://plugins.jquery.com/project/Jcrop">project</a>
-<a href="http://deepliquid.com/projects/Jcrop/demos.php">demo</a></p>
-
-<h2>label over</h2>
-
-<p>一般情况下，输入框旁边都会带上label说明
-在布局较小的情况下，也许你希望输入框内容直接显示说明
-当用户输入内容时，说明内容自动清除，label over就是实现此功能的插件
-<a href="http://plugins.jquery.com/project/labelover">project</a>
-<a href="http://remysharp.com/wp-content/uploads/2007/03/label_over_example.html">demo</a></p>
-
-<h2>ZeroClipboard</h2>
-
-<p>结合Flash实现跨浏览器复制网页中内容(或当前地址)到剪贴板
-严格来说这个不算jQuery的插件:)
-<a href="http://code.google.com/p/zeroclipboard/">project</a></p>
-
-<h2>MultiFile</h2>
-
-<p>实现浏览器多文件上传时，只显示一个文件浏览按钮</p>
-
-<pre>
-1.修正删除按钮样式
-$.fn.MultiFile.options.STRING.remove = '<a class="icon-16px-box j-icon i-close">&nbsp;</a>';
-</pre>
-
-
-<p><a href="http://www.fyneworks.com/jquery/multiple-file-upload/">project</a></p>
-
-<h2>JQZoom</h2>
-
-<p>放大查看图片某一部分，网购产品必备</p>
-
-<p><a href="http://www.mind-projects.it/projects/jqzoom">project</a>
-<a href="http://www.mind-projects.it/projects/jqzoom/demos.php">demo</a></p>
-
-<h2>jCarousellite</h2>
-
-<p>显示图片组</p>
-
-<p><a href="http://www.gmarwaha.com/jquery/jcarousellite/index.php">project</a></p>
 ]]></content>
   </entry>
   
