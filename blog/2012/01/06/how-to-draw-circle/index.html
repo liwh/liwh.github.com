@@ -179,9 +179,32 @@
 
 <p><img src="http://ww4.sinaimg.cn/mw600/6757a08cjw1dosny8myysj.jpg" alt="image" /></p>
 
-<p>Begin the path￼￼CGContextBeginPath(context);
-Move around, add lines or arcs to the pathCGContextMoveToPoint(context, 75, 10);CGContextAddLineToPoint(context, 160, 150);CGContextAddLineToPoint(context, 10, 150);Close the path (connects the last point back to the first) CGContextClosePath(context); // not strictly required
-Actually the above draws nothing (yet)!You have to set the graphics state and then fill/stroke the above path to see anything. [[UIColor greenColor] setFill]; // object-oriented convenience method (more in a moment) [[UIColor redColor] setStroke];￼￼￼CGContextDrawPath(context,kCGPathFillStroke); //kCGPathFillStrokeisaconstant</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'><span class="c1">//Begin the path</span>
+</span><span class='line'><span class="err">￼￼</span><span class="n">CGContextBeginPath</span><span class="p">(</span><span class="n">context</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//Move around, add lines or arcs to the path</span>
+</span><span class='line'><span class="n">CGContextMoveToPoint</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="mi">75</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+</span><span class='line'><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">150</span><span class="p">);</span>
+</span><span class='line'><span class="n">CGContextAddLineToPoint</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">150</span><span class="p">);</span>
+</span><span class='line'><span class="c1">//Close the path (connects the last point back to the first) CGContextClosePath(context); // not strictly required</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//Actually the above draws nothing (yet)!</span>
+</span><span class='line'><span class="c1">//You have to set the graphics state and then fill/stroke the above path to see anything. [[UIColor greenColor] setFill]; // object-oriented convenience method (more in a moment) [[UIColor redColor] setStroke];</span>
+</span><span class='line'><span class="err">￼￼￼</span><span class="n">CGContextDrawPath</span><span class="p">(</span><span class="n">context</span><span class="p">,</span><span class="n">kCGPathFillStroke</span><span class="p">);</span> <span class="c1">//kCGPathFillStrokeisaconstant</span>
+</span></code></pre></td></tr></table></div></figure>
+
 </div>
 
 
