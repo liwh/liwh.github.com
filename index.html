@@ -181,6 +181,10 @@
 <p>显示如下：</p>
 
 <p><img src="http://ww4.sinaimg.cn/mw600/6757a08cjw1dosny8myysj.jpg" alt="image" /></p>
+
+<p>Begin the path￼￼CGContextBeginPath(context);
+Move around, add lines or arcs to the pathCGContextMoveToPoint(context, 75, 10);CGContextAddLineToPoint(context, 160, 150);CGContextAddLineToPoint(context, 10, 150);Close the path (connects the last point back to the first) CGContextClosePath(context); // not strictly required
+Actually the above draws nothing (yet)!You have to set the graphics state and then fill/stroke the above path to see anything. [[UIColor greenColor] setFill]; // object-oriented convenience method (more in a moment) [[UIColor redColor] setStroke];￼￼￼CGContextDrawPath(context,kCGPathFillStroke); //kCGPathFillStrokeisaconstant</p>
 </div>
   
   
