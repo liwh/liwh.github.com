@@ -9,11 +9,11 @@
   <meta name="author" content="liwh">
 
   
-  <meta name="description" content="jQuery的简洁高效，越来越受到程序员的欢迎了
-这里介绍我使用过的jQuery插件 jrails jrails不算是一个jquery的插件，而是一个js适配器
-用于将rails自带的js框架prototype，无缝地替换为jQuery
-强烈推荐使用
-project facebox &hellip;">
+  <meta name="description" content="最近，安装了下NoSql的MongoDB数据库,这是一个基于
+分布式文件存储的数据库开源项目，由C++ 语言编写。
+旨在为WEB应用提供可护展的高性能数据存储解决方案。
+常用于高流量网站，在线游戏网站和搜索引擎的大规模数据管理和分类。
+另外，在rails中，它也存在对应的ORM框架 Mongoid &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,71 @@ project facebox &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/12/06/install-mongodb/">安装MongoDB</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-06T00:00:00+08:00" pubdate data-updated="true">Dec 6<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最近，安装了下NoSql的MongoDB数据库,这是一个基于
+分布式文件存储的数据库开源项目，由C++ 语言编写。
+旨在为WEB应用提供可护展的高性能数据存储解决方案。
+常用于高流量网站，在线游戏网站和搜索引擎的大规模数据管理和分类。
+另外，在rails中，它也存在对应的ORM框架 <a href="https://github.com/mongoid/mongoid">Mongoid</a> ，可用来替代Rails自带的ActiveRecord。
+现在最新版本是1.6,<a href="http://www.mongodb.org/downloads">下载地址</a>
+下面介绍下在OS X下的安装步骤：</p>
+
+<h2>安装homebrew</h2>
+
+<p>现在,在os x下比较流行的包管理是用homebrew,替代了MacPorts.
+具体步骤见:<a href="http://mxcl.github.com/homebrew/">安装homebrew</a></p>
+
+<h2>安装MongoDB</h2>
+
+<ul>
+<li>sudo brew install mongodb</li>
+<li>sudo cp /usr/local/Cellar/mongodb/1.6.XXXXX/org.mongodb.mongod.plist  /Library/LaunchDaemons/</li>
+<li>sudo launchctl load /Library/LaunchDaemons/org.mongodb.mongod.plist</li>
+</ul>
+
+
+<h2>参考资料</h2>
+
+<p><a href="http://shiftcommathree.com/articles/how-to-install-mongodb-on-os-x">How to install MongoDB on OS X</a></p>
+
+<h2>MongoDB学习资料</h2>
+
+<p><a href="http://www.javaeye.com/news/16677-mongodb">MongoDB入门学习资料</a>
+<a href="http://www.markus-gattol.name/ws/mongodb.html">Details for mongodb</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -211,6 +276,10 @@ $.fn.MultiFile.options.STRING.remove = '<a class="icon-16px-box j-icon i-close">
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/01/06/introduct-ui-gesture-recognizer/">IOS手势操作</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/01/06/how-to-draw-circle/">how-to-draw-circle</a>
       </li>
     
@@ -224,10 +293,6 @@ $.fn.MultiFile.options.STRING.remove = '<a class="icon-16px-box j-icon i-close">
     
       <li class="post">
         <a href="/blog/2011/09/28/introduce-active-admin-framework/">后台管理框架active_admin</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/">将rails项目升级到rails 3.1</a>
       </li>
     
   </ul>

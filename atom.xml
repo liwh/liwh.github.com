@@ -4,7 +4,7 @@
   <title><![CDATA[Code for fun]]></title>
   <link href="http://liwh.github.com/atom.xml" rel="self"/>
   <link href="http://liwh.github.com/"/>
-  <updated>2012-01-06T13:54:22+08:00</updated>
+  <updated>2012-01-07T19:10:28+08:00</updated>
   <id>http://liwh.github.com/</id>
   <author>
     <name><![CDATA[liwh]]></name>
@@ -12,6 +12,78 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[IOS手势操作]]></title>
+    <link href="http://liwh.github.com/blog/2012/01/06/introduct-ui-gesture-recognizer/"/>
+    <updated>2012-01-06T15:28:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2012/01/06/introduct-ui-gesture-recognizer</id>
+    <content type="html"><![CDATA[<p>当我们使用IPhone的时候，时常通过我们的手势来操作，比如说，我们通过两指挤压使图片放大缩小等，还有我们通过手指划过改变直线的弯曲程度等等。
+这些在IOS中都利用到了UIGestureRecognizer类。</p>
+
+<h4>如何使用</h4>
+
+<ul>
+<li>增加一个手势识别方法给UIView。</li>
+<li>提供响应的&#8221;handle&#8221;方法处理相应的手势操作。</li>
+</ul>
+
+
+<p>例如，我们在Controller中增加一个手势识别方法给UIView。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'>  <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">setPannableView:</span><span class="p">(</span><span class="n">UIView</span> <span class="o">*</span><span class="p">)</span><span class="n">pannableView</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>          <span class="n">_pannableView</span> <span class="o">=</span> <span class="n">pannableView</span><span class="p">;</span>
+</span><span class='line'>          <span class="n">UIPanGestureRecognizer</span> <span class="o">*</span><span class="n">pangr</span> <span class="o">=</span>
+</span><span class='line'>              <span class="p">[[</span><span class="n">UIPanGestureRecognizer</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithTarget:</span><span class="n">pannableView</span> <span class="nl">action:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">pan:</span><span class="p">)];</span> <span class="c1">//为panableView增加手指划过操作</span>
+</span><span class='line'>          <span class="p">[</span><span class="n">pannableView</span> <span class="nl">addGestureRecognizer:</span><span class="n">pangr</span><span class="p">];</span> <span class="c1">//相当于开启对应的手势操作，如果，不增加这句，前面就算实现了对应的方法，也是不会执行的</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>每种手势操作都提供对应的方法让我们处理对应的事件。例如，UIPanGestureRecognizer就提供了三种方法，如：</p>
+
+<ul>
+<li><ul>
+<li>(CGPoint)translationInView:(UIView <em>)aView;</em> - (CGPoint)velocityInView:(UIView <em>)aView;</em> - (void)setTranslation:(CGPoint)translation inView:(UIView *)aView;</li>
+</ul>
+</li>
+</ul>
+
+
+<p>另外，我们就是通过对其state的判断来觉得该处理什么的样的操作了.例如，下面的判断就是说，当我们接触移动，或者停止接触的时候，我们都更新view</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'> <span class="k">if</span> <span class="p">((</span><span class="n">gesture</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateChanged</span><span class="p">)</span> <span class="o">||</span>
+</span><span class='line'>        <span class="p">(</span><span class="n">gesture</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateEnded</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">CGPoint</span> <span class="n">translation</span> <span class="o">=</span> <span class="p">[</span><span class="n">recognizer</span> <span class="nl">translationInView:</span><span class="n">self</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">self</span><span class="p">.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="o">+</span><span class="n">translation</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="o">+</span><span class="n">translation</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>         <span class="p">[</span><span class="n">recognizer</span> <span class="nl">setTranslation:</span><span class="n">CGPointZero</span> <span class="nl">inView:</span><span class="n">self</span><span class="p">];</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>其它的一些手势操作</h4>
+
+<ul>
+<li>UIPinchGestureRecognizer</li>
+<li>UIRotationGestureRecognizer</li>
+<li>UISwipeGestureRecognizer</li>
+<li>UITapGestureRecognizer</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[how-to-draw-circle]]></title>
@@ -99,6 +171,10 @@
 </span><span class='line'><span class="err">￼￼￼</span><span class="n">CGContextDrawPath</span><span class="p">(</span><span class="n">context</span><span class="p">,</span><span class="n">kCGPathFillStroke</span><span class="p">);</span> <span class="c1">//kCGPathFillStrokeisaconstant</span>
 </span></code></pre></td></tr></table></div></figure>
 
+
+<h4>参考资料</h4>
+
+<p><a href="http://www.cocoachina.com/newbie/basic/2012/0106/3840.html">画图代码笔记</a></p>
 ]]></content>
   </entry>
   
@@ -1671,44 +1747,6 @@ opt + cmd + . :自动增加html close tag</p>
 <h1>linux 开机自动启动脚本方法</h1>
 
 <p>  <a href="http://linux.chinaunix.net/techdoc/beginner/2010/01/07/1153083.shtml">linux开机自动启动脚本</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[安装MongoDB]]></title>
-    <link href="http://liwh.github.com/blog/2010/12/06/install-mongodb/"/>
-    <updated>2010-12-06T00:00:00+08:00</updated>
-    <id>http://liwh.github.com/blog/2010/12/06/install-mongodb</id>
-    <content type="html"><![CDATA[<p>最近，安装了下NoSql的MongoDB数据库,这是一个基于
-分布式文件存储的数据库开源项目，由C++ 语言编写。
-旨在为WEB应用提供可护展的高性能数据存储解决方案。
-常用于高流量网站，在线游戏网站和搜索引擎的大规模数据管理和分类。
-另外，在rails中，它也存在对应的ORM框架 <a href="https://github.com/mongoid/mongoid">Mongoid</a> ，可用来替代Rails自带的ActiveRecord。
-现在最新版本是1.6,<a href="http://www.mongodb.org/downloads">下载地址</a>
-下面介绍下在OS X下的安装步骤：</p>
-
-<h2>安装homebrew</h2>
-
-<p>现在,在os x下比较流行的包管理是用homebrew,替代了MacPorts.
-具体步骤见:<a href="http://mxcl.github.com/homebrew/">安装homebrew</a></p>
-
-<h2>安装MongoDB</h2>
-
-<ul>
-<li>sudo brew install mongodb</li>
-<li>sudo cp /usr/local/Cellar/mongodb/1.6.XXXXX/org.mongodb.mongod.plist  /Library/LaunchDaemons/</li>
-<li>sudo launchctl load /Library/LaunchDaemons/org.mongodb.mongod.plist</li>
-</ul>
-
-
-<h2>参考资料</h2>
-
-<p><a href="http://shiftcommathree.com/articles/how-to-install-mongodb-on-os-x">How to install MongoDB on OS X</a></p>
-
-<h2>MongoDB学习资料</h2>
-
-<p><a href="http://www.javaeye.com/news/16677-mongodb">MongoDB入门学习资料</a>
-<a href="http://www.markus-gattol.name/ws/mongodb.html">Details for mongodb</a></p>
 ]]></content>
   </entry>
   

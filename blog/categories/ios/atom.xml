@@ -4,7 +4,7 @@
   <title><![CDATA[Category: ios | Code for fun]]></title>
   <link href="http://liwh.github.com/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://liwh.github.com/"/>
-  <updated>2012-01-06T13:54:22+08:00</updated>
+  <updated>2012-01-07T19:10:28+08:00</updated>
   <id>http://liwh.github.com/</id>
   <author>
     <name><![CDATA[liwh]]></name>
@@ -61,6 +61,10 @@ UIGraphicsPopContext();
 //Move around, add lines or arcs to the pathCGContextMoveToPoint(context, 75, 10);CGContextAddLineToPoint(context, 160, 150);CGContextAddLineToPoint(context, 10, 150);//Close the path (connects the last point back to the first) CGContextClosePath(context); // not strictly required
 //Actually the above draws nothing (yet)!//You have to set the graphics state and then fill/stroke the above path to see anything. [[UIColor greenColor] setFill]; // object-oriented convenience method (more in a moment) [[UIColor redColor] setStroke];￼￼￼CGContextDrawPath(context,kCGPathFillStroke); //kCGPathFillStrokeisaconstant
 </code></p>
+
+<h4>参考资料</h4>
+
+<p><a href="http://www.cocoachina.com/newbie/basic/2012/0106/3840.html">画图代码笔记</a></p>
 ]]></content>
   </entry>
   

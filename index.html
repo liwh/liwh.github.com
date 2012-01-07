@@ -9,30 +9,9 @@
   <meta name="author" content="liwh">
 
   
-  <meta name="description" content="这里介绍，如何实现在UIView中画圆，下面是主要代码： 1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
--(void)drawCircleAtPoint:(CGPoint)p withRadius:(CGFloat) &hellip;">
+  <meta name="description" content="当我们使用IPhone的时候，时常通过我们的手势来操作，比如说，我们通过两指挤压使图片放大缩小等，还有我们通过手指划过改变直线的弯曲程度等等。
+这些在IOS中都利用到了UIGestureRecognizer类。 如何使用 增加一个手势识别方法给UIView。
+提供响应的&#8221;handle &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -98,6 +77,105 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/01/06/introduct-ui-gesture-recognizer/">IOS手势操作</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-01-06T15:28:00+08:00" pubdate data-updated="true">Jan 6<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>当我们使用IPhone的时候，时常通过我们的手势来操作，比如说，我们通过两指挤压使图片放大缩小等，还有我们通过手指划过改变直线的弯曲程度等等。
+这些在IOS中都利用到了UIGestureRecognizer类。</p>
+
+<h4>如何使用</h4>
+
+<ul>
+<li>增加一个手势识别方法给UIView。</li>
+<li>提供响应的&#8221;handle&#8221;方法处理相应的手势操作。</li>
+</ul>
+
+
+<p>例如，我们在Controller中增加一个手势识别方法给UIView。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'>  <span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">setPannableView:</span><span class="p">(</span><span class="n">UIView</span> <span class="o">*</span><span class="p">)</span><span class="n">pannableView</span>
+</span><span class='line'>      <span class="p">{</span>
+</span><span class='line'>          <span class="n">_pannableView</span> <span class="o">=</span> <span class="n">pannableView</span><span class="p">;</span>
+</span><span class='line'>          <span class="n">UIPanGestureRecognizer</span> <span class="o">*</span><span class="n">pangr</span> <span class="o">=</span>
+</span><span class='line'>              <span class="p">[[</span><span class="n">UIPanGestureRecognizer</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithTarget:</span><span class="n">pannableView</span> <span class="nl">action:</span><span class="k">@selector</span><span class="p">(</span><span class="nl">pan:</span><span class="p">)];</span> <span class="c1">//为panableView增加手指划过操作</span>
+</span><span class='line'>          <span class="p">[</span><span class="n">pannableView</span> <span class="nl">addGestureRecognizer:</span><span class="n">pangr</span><span class="p">];</span> <span class="c1">//相当于开启对应的手势操作，如果，不增加这句，前面就算实现了对应的方法，也是不会执行的</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>每种手势操作都提供对应的方法让我们处理对应的事件。例如，UIPanGestureRecognizer就提供了三种方法，如：</p>
+
+<ul>
+<li><ul>
+<li>(CGPoint)translationInView:(UIView <em>)aView;</em> - (CGPoint)velocityInView:(UIView <em>)aView;</em> - (void)setTranslation:(CGPoint)translation inView:(UIView *)aView;</li>
+</ul>
+</li>
+</ul>
+
+
+<p>另外，我们就是通过对其state的判断来觉得该处理什么的样的操作了.例如，下面的判断就是说，当我们接触移动，或者停止接触的时候，我们都更新view</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'> <span class="k">if</span> <span class="p">((</span><span class="n">gesture</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateChanged</span><span class="p">)</span> <span class="o">||</span>
+</span><span class='line'>        <span class="p">(</span><span class="n">gesture</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">UIGestureRecognizerStateEnded</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">CGPoint</span> <span class="n">translation</span> <span class="o">=</span> <span class="p">[</span><span class="n">recognizer</span> <span class="nl">translationInView:</span><span class="n">self</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">self</span><span class="p">.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">CGPointMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">x</span><span class="o">+</span><span class="n">translation</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">self</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="o">+</span><span class="n">translation</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>         <span class="p">[</span><span class="n">recognizer</span> <span class="nl">setTranslation:</span><span class="n">CGPointZero</span> <span class="nl">inView:</span><span class="n">self</span><span class="p">];</span>
+</span><span class='line'> <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>其它的一些手势操作</h4>
+
+<ul>
+<li>UIPinchGestureRecognizer</li>
+<li>UIRotationGestureRecognizer</li>
+<li>UISwipeGestureRecognizer</li>
+<li>UITapGestureRecognizer</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -208,6 +286,10 @@
 </span><span class='line'><span class="err">￼￼￼</span><span class="n">CGContextDrawPath</span><span class="p">(</span><span class="n">context</span><span class="p">,</span><span class="n">kCGPathFillStroke</span><span class="p">);</span> <span class="c1">//kCGPathFillStrokeisaconstant</span>
 </span></code></pre></td></tr></table></div></figure>
 
+
+<h4>参考资料</h4>
+
+<p><a href="http://www.cocoachina.com/newbie/basic/2012/0106/3840.html">画图代码笔记</a></p>
 </div>
   
   
@@ -937,73 +1019,6 @@ base=true这个配置，用来不让</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/03/31/often-use-cli/">个人常用的shell</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-03-31T00:00:00+08:00" pubdate data-updated="true">Mar 31<span>st</span>, 2011</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>这里记载自己项目开发一些常用的命令</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>   <span class="c">#运行resque后台任务</span>
-</span><span class='line'>   <span class="nv">QUEUE</span><span class="o">=</span>* <span class="nv">INTERVAL</span><span class="o">=</span>1 rake resque:work
-</span><span class='line'>   <span class="c">#查看resque任务的执行情况</span>
-</span><span class='line'>   resque-web -p 8282
-</span><span class='line'>   <span class="c">#重启unicorn</span>
-</span><span class='line'>   sudo sv restart unicorn-vagrant
-</span><span class='line'>   <span class="c">#查看unicorn日志</span>
-</span><span class='line'>   tail -f /etc/service/unicorn-vagrant/log/main/current
-</span><span class='line'>   <span class="c">#restart the nginx server</span>
-</span><span class='line'>   sudo /etc/init.d/nginx restart
-</span><span class='line'>   <span class="c">#restart the postgresql</span>
-</span><span class='line'>   <span class="c">#export PGDATA = &quot;/usr/local/var/postgres&quot;</span>
-</span><span class='line'>   pg_ctl restart
-</span><span class='line'>   <span class="k">for </span>i in <span class="sb">`</span>pidof postgres<span class="sb">`</span>; <span class="k">do </span><span class="nb">kill</span> -9 <span class="nv">$i</span> ; <span class="k">done</span>
-</span></code></pre></td></tr></table></div></figure>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -1019,6 +1034,10 @@ base=true这个配置，用来不让</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/01/06/introduct-ui-gesture-recognizer/">IOS手势操作</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/01/06/how-to-draw-circle/">how-to-draw-circle</a>
       </li>
     
@@ -1032,10 +1051,6 @@ base=true这个配置，用来不让</p>
     
       <li class="post">
         <a href="/blog/2011/09/28/introduce-active-admin-framework/">后台管理框架active_admin</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/">将rails项目升级到rails 3.1</a>
       </li>
     
   </ul>

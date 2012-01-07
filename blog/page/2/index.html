@@ -9,11 +9,20 @@
   <meta name="author" content="liwh">
 
   
-  <meta name="description" content="在项目中，很多时候，我们的代码都是从上到下依次执行的，就是说，
-得等到上面的任务完成之后，下面的任务才能执行， 但是，很多时候，
-当用户提交一个很耗时间的请求的时候，这时候，为了让用户不需要等待，
-去做别的事情，我们就得把 这些耗时间的任务放在后台执行了。用于后台
-任务执行的插件，在ruby中， &hellip;">
+  <meta name="description" content="这里记载自己项目开发一些常用的命令 1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14 #运行resque后台任务 QUEUE=* INTERVAL=1 rake resque:work #查看resque任务的执行情况 resque-web -p 8282 #重启unicorn &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +88,73 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/03/31/often-use-cli/">个人常用的shell</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-31T00:00:00+08:00" pubdate data-updated="true">Mar 31<span>st</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>这里记载自己项目开发一些常用的命令</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>   <span class="c">#运行resque后台任务</span>
+</span><span class='line'>   <span class="nv">QUEUE</span><span class="o">=</span>* <span class="nv">INTERVAL</span><span class="o">=</span>1 rake resque:work
+</span><span class='line'>   <span class="c">#查看resque任务的执行情况</span>
+</span><span class='line'>   resque-web -p 8282
+</span><span class='line'>   <span class="c">#重启unicorn</span>
+</span><span class='line'>   sudo sv restart unicorn-vagrant
+</span><span class='line'>   <span class="c">#查看unicorn日志</span>
+</span><span class='line'>   tail -f /etc/service/unicorn-vagrant/log/main/current
+</span><span class='line'>   <span class="c">#restart the nginx server</span>
+</span><span class='line'>   sudo /etc/init.d/nginx restart
+</span><span class='line'>   <span class="c">#restart the postgresql</span>
+</span><span class='line'>   <span class="c">#export PGDATA = &quot;/usr/local/var/postgres&quot;</span>
+</span><span class='line'>   pg_ctl restart
+</span><span class='line'>   <span class="k">for </span>i in <span class="sb">`</span>pidof postgres<span class="sb">`</span>; <span class="k">do </span><span class="nb">kill</span> -9 <span class="nv">$i</span> ; <span class="k">done</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1349,71 +1425,6 @@ opt + cmd + . :自动增加html close tag</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/12/06/install-mongodb/">安装MongoDB</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-12-06T00:00:00+08:00" pubdate data-updated="true">Dec 6<span>th</span>, 2010</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>最近，安装了下NoSql的MongoDB数据库,这是一个基于
-分布式文件存储的数据库开源项目，由C++ 语言编写。
-旨在为WEB应用提供可护展的高性能数据存储解决方案。
-常用于高流量网站，在线游戏网站和搜索引擎的大规模数据管理和分类。
-另外，在rails中，它也存在对应的ORM框架 <a href="https://github.com/mongoid/mongoid">Mongoid</a> ，可用来替代Rails自带的ActiveRecord。
-现在最新版本是1.6,<a href="http://www.mongodb.org/downloads">下载地址</a>
-下面介绍下在OS X下的安装步骤：</p>
-
-<h2>安装homebrew</h2>
-
-<p>现在,在os x下比较流行的包管理是用homebrew,替代了MacPorts.
-具体步骤见:<a href="http://mxcl.github.com/homebrew/">安装homebrew</a></p>
-
-<h2>安装MongoDB</h2>
-
-<ul>
-<li>sudo brew install mongodb</li>
-<li>sudo cp /usr/local/Cellar/mongodb/1.6.XXXXX/org.mongodb.mongod.plist  /Library/LaunchDaemons/</li>
-<li>sudo launchctl load /Library/LaunchDaemons/org.mongodb.mongod.plist</li>
-</ul>
-
-
-<h2>参考资料</h2>
-
-<p><a href="http://shiftcommathree.com/articles/how-to-install-mongodb-on-os-x">How to install MongoDB on OS X</a></p>
-
-<h2>MongoDB学习资料</h2>
-
-<p><a href="http://www.javaeye.com/news/16677-mongodb">MongoDB入门学习资料</a>
-<a href="http://www.markus-gattol.name/ws/mongodb.html">Details for mongodb</a></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/3/">&larr; Older</a>
@@ -1431,6 +1442,10 @@ opt + cmd + . :自动增加html close tag</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/01/06/introduct-ui-gesture-recognizer/">IOS手势操作</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/01/06/how-to-draw-circle/">how-to-draw-circle</a>
       </li>
     
@@ -1444,10 +1459,6 @@ opt + cmd + . :自动增加html close tag</p>
     
       <li class="post">
         <a href="/blog/2011/09/28/introduce-active-admin-framework/">后台管理框架active_admin</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2011/08/29/how-to-update-rails-project-to-rails-3.1/">将rails项目升级到rails 3.1</a>
       </li>
     
   </ul>
