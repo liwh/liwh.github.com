@@ -4,7 +4,7 @@
   <title><![CDATA[Code for fun]]></title>
   <link href="http://liwh.github.com/atom.xml" rel="self"/>
   <link href="http://liwh.github.com/"/>
-  <updated>2012-01-07T19:10:28+08:00</updated>
+  <updated>2012-01-08T14:39:20+08:00</updated>
   <id>http://liwh.github.com/</id>
   <author>
     <name><![CDATA[liwh]]></name>
@@ -12,6 +12,34 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[构建cocos2d开发环境]]></title>
+    <link href="http://liwh.github.com/blog/2012/01/08/how-to-build-cocoa2d-application/"/>
+    <updated>2012-01-08T14:26:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2012/01/08/how-to-build-cocoa2d-application</id>
+    <content type="html"><![CDATA[<p>cocos2d是一个开源框架，用于构建2D游戏、演示程序和其他图形界面交互应用等。参见<a href="http://baike.baidu.com/view/3800461.html?fromTaglist">百科</a></p>
+
+<ul>
+<li><p>首先下载相应的<a href="http://www.cocos2d-iphone.org/download">文件</a>,最新的代码可以在github上<a href="https://github.com/cocos2d/cocos2d-iphone">查看</a></p></li>
+<li><p>然后，到对应的目录，在termianl下，执行下面命令</p></li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'> ./install-templates.sh -u -f
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><p>然后，在我们创建工程的模版中，我们就嫩看见对应的模版了。如下图所示：
+<img src="http://liwh.github.com/images/cocos2d.png" alt="image" /></p></li>
+<li><p>最后，我们点xcode的运行，就可以看到如下效果了
+<img src="http://liwh.github.com/images/hello_world.png" alt="image" /></p></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[IOS手势操作]]></title>
@@ -1732,21 +1760,6 @@ opt + cmd + . :自动增加html close tag</p>
 <p><a href="http://jasonseifer.com/2010/04/06/rake-tutorial">Rake tutorila</a></p>
 
 <p><a href="http://railscasts.com/episodes/66-custom-rake-tasks">Custom Rake Tasks</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Study Resource]]></title>
-    <link href="http://liwh.github.com/blog/2010/12/08/study-resource/"/>
-    <updated>2010-12-08T00:00:00+08:00</updated>
-    <id>http://liwh.github.com/blog/2010/12/08/study-resource</id>
-    <content type="html"><![CDATA[<h1>学习html+css</h1>
-
-<p>  <a href="http://zh.html.net/tutorials/css">学习CSS</a></p>
-
-<h1>linux 开机自动启动脚本方法</h1>
-
-<p>  <a href="http://linux.chinaunix.net/techdoc/beginner/2010/01/07/1153083.shtml">linux开机自动启动脚本</a></p>
 ]]></content>
   </entry>
   

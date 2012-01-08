@@ -9,20 +9,10 @@
   <meta name="author" content="liwh">
 
   
-  <meta name="description" content="这里记载自己项目开发一些常用的命令 1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14 #运行resque后台任务 QUEUE=* INTERVAL=1 rake resque:work #查看resque任务的执行情况 resque-web -p 8282 #重启unicorn &hellip;">
+  <meta name="description" content="由于zsh相对于bash来说，有些更好的功能。比如说补全功能等。但是，有个问题，
+在我们安装完 某个库，或者新增什么bin的时候，我们等新开terminal，才能重新
+加载它。这里，我们在zshrc里，定义 一个reload函数，这样，我们在新增什么函数，
+或者bin的时候， &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +78,74 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2011/04/02/reload-zsh/">Reload Zsh</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-04-02T00:00:00+08:00" pubdate data-updated="true">Apr 2<span>nd</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>由于zsh相对于bash来说，有些更好的功能。比如说补全功能等。但是，有个问题，
+在我们安装完 某个库，或者新增什么bin的时候，我们等新开terminal，才能重新
+加载它。这里，我们在zshrc里，定义 一个reload函数，这样，我们在新增什么函数，
+或者bin的时候，我们就不需要重启terminal，就能加载它了</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="k">function </span>reload<span class="o">()</span> <span class="o">{</span>
+</span><span class='line'> <span class="k">if</span> <span class="o">[[</span> <span class="s2">&quot;$#*&quot;</span> -eq 0 <span class="o">]]</span>; <span class="k">then</span>
+</span><span class='line'><span class="k">   </span><span class="nb">test</span> -r /etc/zsh/zsh-oli <span class="o">&amp;&amp;</span> . /etc/zsh/zsh-oli
+</span><span class='line'>   <span class="nb">test</span> -r ~/.zshrc <span class="o">&amp;&amp;</span> . ~/.zshrc
+</span><span class='line'>   <span class="k">return </span>0
+</span><span class='line'> <span class="k">else</span>
+</span><span class='line'><span class="k">   </span><span class="nb">local </span>fn
+</span><span class='line'>   <span class="k">for </span>fn in <span class="nv">$*</span>; <span class="k">do</span>
+</span><span class='line'><span class="k">     </span>unfunction <span class="nv">$fn</span>
+</span><span class='line'>     autoload -U <span class="nv">$fn</span>
+</span><span class='line'>     <span class="k">done</span>
+</span><span class='line'><span class="k">   fi</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1383,48 +1441,6 @@ opt + cmd + . :自动增加html close tag</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2010/12/08/study-resource/">Study Resource</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2010-12-08T00:00:00+08:00" pubdate data-updated="true">Dec 8<span>th</span>, 2010</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h1>学习html+css</h1>
-
-<p>  <a href="http://zh.html.net/tutorials/css">学习CSS</a></p>
-
-<h1>linux 开机自动启动脚本方法</h1>
-
-<p>  <a href="http://linux.chinaunix.net/techdoc/beginner/2010/01/07/1153083.shtml">linux开机自动启动脚本</a></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/3/">&larr; Older</a>
@@ -1442,6 +1458,10 @@ opt + cmd + . :自动增加html close tag</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/01/08/how-to-build-cocoa2d-application/">构建cocos2d开发环境</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/01/06/introduct-ui-gesture-recognizer/">IOS手势操作</a>
       </li>
     
@@ -1455,10 +1475,6 @@ opt + cmd + . :自动增加html close tag</p>
     
       <li class="post">
         <a href="/blog/2011/11/05/build-oauth2-provider/">build-oauth2-provider</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2011/09/28/introduce-active-admin-framework/">后台管理框架active_admin</a>
       </li>
     
   </ul>
