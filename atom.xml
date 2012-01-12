@@ -4,7 +4,7 @@
   <title><![CDATA[Code for fun]]></title>
   <link href="http://liwh.github.com/atom.xml" rel="self"/>
   <link href="http://liwh.github.com/"/>
-  <updated>2012-01-08T21:04:31+08:00</updated>
+  <updated>2012-01-12T20:26:13+08:00</updated>
   <id>http://liwh.github.com/</id>
   <author>
     <name><![CDATA[liwh]]></name>
@@ -12,6 +12,74 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[给地图大头针加图片]]></title>
+    <link href="http://liwh.github.com/blog/2012/01/09/how-to-add-image-to-map-pin/"/>
+    <updated>2012-01-09T13:26:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2012/01/09/how-to-add-image-to-map-pin</id>
+    <content type="html"><![CDATA[<p>我们在IPhone中使用谷歌地图的时候，我们可以在地图中插入大头针。这些大头针左边显示了图片，右边一般显示>标记，用于显示更加详细的信息。
+下面，介绍下，如何在大头针中加图片。</p>
+
+<p>每个Annotations都可以用一个callout用于显示信息， 默认，我们点击的时候，只显示 <strong>title</strong> 和 <strong>subtitle</strong> ,但是，我们可以为它增加
+左边和右边的accessory视图。一般，我们左侧会增加图片，右边一般增加一个UIButton（UIButtonTypeDetailDisclosure).下面，介绍如何增加：</p>
+
+<ul>
+<li>首先，给地图控制器增加下面方法，用于设置图片</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>MapViewController.m</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'><span class="o">-</span><span class="p">(</span><span class="n">MKAnnotationView</span> <span class="o">*</span><span class="p">)</span><span class="nl">mapView:</span><span class="p">(</span><span class="n">MKMapView</span> <span class="o">*</span><span class="p">)</span><span class="n">mapView</span> <span class="nl">viewForAnnotation:</span><span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">MKAnnotation</span><span class="o">&gt;</span><span class="p">)</span><span class="n">annotation</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">//为针上增加左侧图片</span>
+</span><span class='line'>    <span class="n">MKAnnotationView</span> <span class="o">*</span><span class="n">aView</span> <span class="o">=</span> <span class="p">[</span><span class="n">mapView</span> <span class="nl">dequeueReusableAnnotationViewWithIdentifier:</span><span class="s">@&quot;MapVC&quot;</span><span class="p">];</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">aView</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">aView</span> <span class="o">=</span> <span class="p">[[</span><span class="n">MKPinAnnotationView</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithAnnotation:</span><span class="n">annotation</span> <span class="nl">reuseIdentifier:</span><span class="s">@&quot;MapVC&quot;</span><span class="p">];</span>
+</span><span class='line'>        <span class="n">aView</span><span class="p">.</span><span class="n">canShowCallout</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span> 
+</span><span class='line'>        <span class="n">aView</span><span class="p">.</span><span class="n">leftCalloutAccessoryView</span>  <span class="o">=</span> <span class="p">[[</span><span class="n">UIImageView</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithFrame:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">)];</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="n">aView</span><span class="p">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">[(</span><span class="n">UIImageView</span> <span class="o">*</span><span class="p">)</span><span class="n">aView</span><span class="p">.</span><span class="n">leftCalloutAccessoryView</span> <span class="nl">setImage:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">aView</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">mapView:</span><span class="p">(</span><span class="n">MKMapView</span> <span class="o">*</span><span class="p">)</span><span class="n">mapView</span> <span class="nl">didSelectAnnotationView:</span><span class="p">(</span><span class="n">MKAnnotationView</span> <span class="o">*</span><span class="p">)</span><span class="n">aView</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">delegate</span> <span class="nl">mapViewController:</span><span class="n">self</span> <span class="nl">imageForAnnotation:</span><span class="n">aView</span><span class="p">.</span><span class="n">annotation</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">[(</span><span class="n">UIImageView</span> <span class="o">*</span><span class="p">)</span><span class="n">aView</span><span class="p">.</span><span class="n">leftCalloutAccessoryView</span> <span class="nl">setImage:</span><span class="n">image</span><span class="p">];</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>设置delegate用于传递所需要显示的图片。</li>
+</ul>
+
+
+<p>具体代码可参见<a href="https://github.com/liwh/PhotoDetail/commit/f90a44a5168a2ca5e2728ab3f84b9667132cac00">样例代码</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[构建cocos2d开发环境]]></title>
@@ -1671,95 +1739,6 @@ opt + cmd + . :自动增加html close tag</p>
 </span><span class='line'>  git push origin --tags
 </span></code></pre></td></tr></table></div></figure>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Rake Tutorial]]></title>
-    <link href="http://liwh.github.com/blog/2010/12/16/rake-tutorial/"/>
-    <updated>2010-12-16T00:00:00+08:00</updated>
-    <id>http://liwh.github.com/blog/2010/12/16/rake-tutorial</id>
-    <content type="html"><![CDATA[<p>我们在使用rails的过程中，经常都会用到rake,比如说执行rails数据库脚本的时候，
-我们用rake db:migrate等等。这里介绍下如何在rails中使用rake任务。</p>
-
-<h2>关于rake</h2>
-
-<p>rake是一个构建任务的工具。rake任务可以完全用ruby代码写。具体可参见: <a href="https://github.com/jimweirich/rake">jimweirich</a></p>
-
-<h2>rake的用法</h2>
-
-<p>这里我们定义一个shell任务，生成一个文件，并向文件中写入helloworld.以rakefile的名字把下面代码保存在任意目录下。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">directory</span> <span class="s2">&quot;tmp&quot;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">file</span> <span class="s2">&quot;hello.tmp&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;tmp&quot;</span> <span class="k">do</span>
-</span><span class='line'><span class="n">sh</span> <span class="s2">&quot;echo &#39;Hello&#39; &gt;&gt; &#39;tmp/hello.tmp&#39;&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>这样我们执行它就会产生下面的效果</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">liweihui</span><span class="vi">@desktop</span><span class="ss">:~</span><span class="err">$</span> <span class="n">rake</span> <span class="n">hello</span><span class="o">.</span><span class="n">tmp</span>
-</span><span class='line'><span class="p">(</span><span class="k">in</span><span class="sr"> /home/</span><span class="n">liweihui</span><span class="p">)</span>
-</span><span class='line'><span class="n">mkdir</span> <span class="o">-</span><span class="nb">p</span> <span class="n">tmp</span>
-</span><span class='line'><span class="n">echo</span> <span class="s1">&#39;Hello&#39;</span> <span class="o">&gt;&gt;</span> <span class="s1">&#39;tmp/hello.tmp&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>利用rake写rails任务</h2>
-
-<p>在rails中，一般把rake 任务放在lib/tasks目录下，但必须以.rake的后缀保存,用于编写项目中一些自动化的功能.比如：我们要输出当前环境下数据库结构的当前版本。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">namespace</span> <span class="ss">:do</span> <span class="k">do</span>
-</span><span class='line'>  <span class="n">desc</span> <span class="s2">&quot;print the migration version&quot;</span>
-</span><span class='line'>  <span class="n">task</span> <span class="ss">:schema_version</span> <span class="o">=&gt;</span> <span class="ss">:environment</span> <span class="k">do</span>
-</span><span class='line'>  <span class="nb">puts</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">select_value</span><span class="p">(</span><span class="s1">&#39;select version from schema_info&#39;</span><span class="p">)</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>我们执行在terminal中执行 rake db:schema_version 就能输出版本结果了。其中namespace是用来定义命名空间的，我们可以将多个类似的任务放在一个namespace中，这也就是将任务进行分组.
-另外，我们还可以获取termial中的参数，来定义rake任务中变量的值。比如，我们执行rake db:rollback step=&#8230;就是这样的。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">desc</span> <span class="s2">&quot;Make coffee&quot;</span>
-</span><span class='line'><span class="n">task</span> <span class="ss">:make_coffee</span> <span class="k">do</span>
-</span><span class='line'>  <span class="n">cups</span> <span class="o">=</span> <span class="no">ENV</span><span class="o">[</span><span class="s2">&quot;COFFEE_CUPS&quot;</span><span class="o">]</span> <span class="o">||</span> <span class="mi">2</span>
-</span><span class='line'>  <span class="nb">puts</span> <span class="s2">&quot;Made </span><span class="si">#{</span><span class="n">cups</span><span class="si">}</span><span class="s2"> cups of coffee. Shakes are gone.&quot;</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>这里我们就可以执行这样的命令rake &#8230; COFFEE_CUPS = 3 。</p>
-
-<h2>相关资料</h2>
-
-<p><a href="http://docs.rubyrake.org/">Rake document</a></p>
-
-<p><a href="http://jasonseifer.com/2010/04/06/rake-tutorial">Rake tutorila</a></p>
-
-<p><a href="http://railscasts.com/episodes/66-custom-rake-tasks">Custom Rake Tasks</a></p>
 ]]></content>
   </entry>
   

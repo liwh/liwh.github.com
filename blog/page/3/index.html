@@ -9,8 +9,8 @@
   <meta name="author" content="liwh">
 
   
-  <meta name="description" content="学习html+css 学习CSS linux 开机自动启动脚本方法 linux开机自动启动脚本
-">
+  <meta name="description" content="我们在使用rails的过程中，经常都会用到rake,比如说执行rails数据库脚本的时候，
+我们用rake db:migrate等等。这里介绍下如何在rails中使用rake任务。 关于rake rake是一个构建任务的工具。rake任务可以完全用ruby代码写。具体可参见: jimweirich &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,122 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2010/12/16/rake-tutorial/">Rake Tutorial</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-12-16T00:00:00+08:00" pubdate data-updated="true">Dec 16<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>我们在使用rails的过程中，经常都会用到rake,比如说执行rails数据库脚本的时候，
+我们用rake db:migrate等等。这里介绍下如何在rails中使用rake任务。</p>
+
+<h2>关于rake</h2>
+
+<p>rake是一个构建任务的工具。rake任务可以完全用ruby代码写。具体可参见: <a href="https://github.com/jimweirich/rake">jimweirich</a></p>
+
+<h2>rake的用法</h2>
+
+<p>这里我们定义一个shell任务，生成一个文件，并向文件中写入helloworld.以rakefile的名字把下面代码保存在任意目录下。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">directory</span> <span class="s2">&quot;tmp&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">file</span> <span class="s2">&quot;hello.tmp&quot;</span> <span class="o">=&gt;</span> <span class="s2">&quot;tmp&quot;</span> <span class="k">do</span>
+</span><span class='line'><span class="n">sh</span> <span class="s2">&quot;echo &#39;Hello&#39; &gt;&gt; &#39;tmp/hello.tmp&#39;&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这样我们执行它就会产生下面的效果</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">liweihui</span><span class="vi">@desktop</span><span class="ss">:~</span><span class="err">$</span> <span class="n">rake</span> <span class="n">hello</span><span class="o">.</span><span class="n">tmp</span>
+</span><span class='line'><span class="p">(</span><span class="k">in</span><span class="sr"> /home/</span><span class="n">liweihui</span><span class="p">)</span>
+</span><span class='line'><span class="n">mkdir</span> <span class="o">-</span><span class="nb">p</span> <span class="n">tmp</span>
+</span><span class='line'><span class="n">echo</span> <span class="s1">&#39;Hello&#39;</span> <span class="o">&gt;&gt;</span> <span class="s1">&#39;tmp/hello.tmp&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>利用rake写rails任务</h2>
+
+<p>在rails中，一般把rake 任务放在lib/tasks目录下，但必须以.rake的后缀保存,用于编写项目中一些自动化的功能.比如：我们要输出当前环境下数据库结构的当前版本。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">namespace</span> <span class="ss">:do</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">desc</span> <span class="s2">&quot;print the migration version&quot;</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:schema_version</span> <span class="o">=&gt;</span> <span class="ss">:environment</span> <span class="k">do</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">select_value</span><span class="p">(</span><span class="s1">&#39;select version from schema_info&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我们执行在terminal中执行 rake db:schema_version 就能输出版本结果了。其中namespace是用来定义命名空间的，我们可以将多个类似的任务放在一个namespace中，这也就是将任务进行分组.
+另外，我们还可以获取termial中的参数，来定义rake任务中变量的值。比如，我们执行rake db:rollback step=&#8230;就是这样的。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">desc</span> <span class="s2">&quot;Make coffee&quot;</span>
+</span><span class='line'><span class="n">task</span> <span class="ss">:make_coffee</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">cups</span> <span class="o">=</span> <span class="no">ENV</span><span class="o">[</span><span class="s2">&quot;COFFEE_CUPS&quot;</span><span class="o">]</span> <span class="o">||</span> <span class="mi">2</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="s2">&quot;Made </span><span class="si">#{</span><span class="n">cups</span><span class="si">}</span><span class="s2"> cups of coffee. Shakes are gone.&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这里我们就可以执行这样的命令rake &#8230; COFFEE_CUPS = 3 。</p>
+
+<h2>相关资料</h2>
+
+<p><a href="http://docs.rubyrake.org/">Rake document</a></p>
+
+<p><a href="http://jasonseifer.com/2010/04/06/rake-tutorial">Rake tutorila</a></p>
+
+<p><a href="http://railscasts.com/episodes/66-custom-rake-tasks">Custom Rake Tasks</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -315,6 +431,10 @@ $.fn.MultiFile.options.STRING.remove = '<a class="icon-16px-box j-icon i-close">
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/01/09/how-to-add-image-to-map-pin/">给地图大头针加图片</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/01/08/how-to-build-cocoa2d-application/">构建cocos2d开发环境</a>
       </li>
     
@@ -328,10 +448,6 @@ $.fn.MultiFile.options.STRING.remove = '<a class="icon-16px-box j-icon i-close">
     
       <li class="post">
         <a href="/blog/2012/01/03/ios-gcd/">GCD介绍</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2011/11/05/build-oauth2-provider/">build-oauth2-provider</a>
       </li>
     
   </ul>

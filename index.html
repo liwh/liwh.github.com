@@ -9,8 +9,8 @@
   <meta name="author" content="liwh">
 
   
-  <meta name="description" content="cocos2d是一个开源框架，用于构建2D游戏、演示程序和其他图形界面交互应用等。参见百科 首先下载相应的文件,最新的代码可以在github上查看
-然后，到对应的目录，在termianl下，执行下面命令 1 ./install-templates.sh -u -f 然后，在我们创建工程的模版中， &hellip;">
+  <meta name="description" content="我们在IPhone中使用谷歌地图的时候，我们可以在地图中插入大头针。这些大头针左边显示了图片，右边一般显示>标记，用于显示更加详细的信息。
+下面，介绍下，如何在大头针中加图片。 每个Annotations都可以用一个callout用于显示信息， 默认，我们点击的时候，只显示 title 和 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -76,6 +76,101 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/01/09/how-to-add-image-to-map-pin/">给地图大头针加图片</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-01-09T13:26:00+08:00" pubdate data-updated="true">Jan 9<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>我们在IPhone中使用谷歌地图的时候，我们可以在地图中插入大头针。这些大头针左边显示了图片，右边一般显示>标记，用于显示更加详细的信息。
+下面，介绍下，如何在大头针中加图片。</p>
+
+<p>每个Annotations都可以用一个callout用于显示信息， 默认，我们点击的时候，只显示 <strong>title</strong> 和 <strong>subtitle</strong> ,但是，我们可以为它增加
+左边和右边的accessory视图。一般，我们左侧会增加图片，右边一般增加一个UIButton（UIButtonTypeDetailDisclosure).下面，介绍如何增加：</p>
+
+<ul>
+<li>首先，给地图控制器增加下面方法，用于设置图片</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>MapViewController.m</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'><span class="o">-</span><span class="p">(</span><span class="n">MKAnnotationView</span> <span class="o">*</span><span class="p">)</span><span class="nl">mapView:</span><span class="p">(</span><span class="n">MKMapView</span> <span class="o">*</span><span class="p">)</span><span class="n">mapView</span> <span class="nl">viewForAnnotation:</span><span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">MKAnnotation</span><span class="o">&gt;</span><span class="p">)</span><span class="n">annotation</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">//为针上增加左侧图片</span>
+</span><span class='line'>    <span class="n">MKAnnotationView</span> <span class="o">*</span><span class="n">aView</span> <span class="o">=</span> <span class="p">[</span><span class="n">mapView</span> <span class="nl">dequeueReusableAnnotationViewWithIdentifier:</span><span class="s">@&quot;MapVC&quot;</span><span class="p">];</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">aView</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">aView</span> <span class="o">=</span> <span class="p">[[</span><span class="n">MKPinAnnotationView</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithAnnotation:</span><span class="n">annotation</span> <span class="nl">reuseIdentifier:</span><span class="s">@&quot;MapVC&quot;</span><span class="p">];</span>
+</span><span class='line'>        <span class="n">aView</span><span class="p">.</span><span class="n">canShowCallout</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span> 
+</span><span class='line'>        <span class="n">aView</span><span class="p">.</span><span class="n">leftCalloutAccessoryView</span>  <span class="o">=</span> <span class="p">[[</span><span class="n">UIImageView</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithFrame:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">)];</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="n">aView</span><span class="p">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">[(</span><span class="n">UIImageView</span> <span class="o">*</span><span class="p">)</span><span class="n">aView</span><span class="p">.</span><span class="n">leftCalloutAccessoryView</span> <span class="nl">setImage:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">aView</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">mapView:</span><span class="p">(</span><span class="n">MKMapView</span> <span class="o">*</span><span class="p">)</span><span class="n">mapView</span> <span class="nl">didSelectAnnotationView:</span><span class="p">(</span><span class="n">MKAnnotationView</span> <span class="o">*</span><span class="p">)</span><span class="n">aView</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">delegate</span> <span class="nl">mapViewController:</span><span class="n">self</span> <span class="nl">imageForAnnotation:</span><span class="n">aView</span><span class="p">.</span><span class="n">annotation</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">[(</span><span class="n">UIImageView</span> <span class="o">*</span><span class="p">)</span><span class="n">aView</span><span class="p">.</span><span class="n">leftCalloutAccessoryView</span> <span class="nl">setImage:</span><span class="n">image</span><span class="p">];</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>设置delegate用于传递所需要显示的图片。</li>
+</ul>
+
+
+<p>具体代码可参见<a href="https://github.com/liwh/PhotoDetail/commit/f90a44a5168a2ca5e2728ab3f84b9667132cac00">样例代码</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -958,53 +1053,6 @@ base=true这个配置，用来不让</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/05/24/devise_update_without_password/">更新用户信息不提供密码(devise)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-05-24T00:00:00+08:00" pubdate data-updated="true">May 24<span>th</span>, 2011</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>当我们使用devise的时候，我们要更新用户信息的时候，比如说，我们在form中提供了password 和password_confirmation的输入框,
-但是，我们希望更新用户信息的时候，如果不输入密码的时候，则不校验password.
-这时我们只需要将下面两句加在user.save的前面就行了。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="n">params</span><span class="o">[</span><span class="ss">:user</span><span class="o">].</span><span class="n">delete</span><span class="p">(</span><span class="ss">:password</span><span class="p">)</span> <span class="k">if</span> <span class="n">params</span><span class="o">[</span><span class="ss">:user</span><span class="o">][</span><span class="ss">:password</span><span class="o">].</span><span class="n">blank?</span>
-</span><span class='line'>  <span class="n">params</span><span class="o">[</span><span class="ss">:user</span><span class="o">].</span><span class="n">delete</span><span class="p">(</span><span class="ss">:password_confirmation</span><span class="p">)</span> <span class="k">if</span> <span class="n">params</span><span class="o">[</span><span class="ss">:user</span><span class="o">][</span><span class="ss">:password_confirmation</span><span class="o">].</span><span class="n">blank?</span> <span class="o">&amp;&amp;</span> <span class="n">params</span><span class="o">[</span><span class="ss">:user</span><span class="o">][</span><span class="ss">:password</span><span class="o">].</span><span class="n">blank?</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -1020,6 +1068,10 @@ base=true这个配置，用来不让</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/01/09/how-to-add-image-to-map-pin/">给地图大头针加图片</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/01/08/how-to-build-cocoa2d-application/">构建cocos2d开发环境</a>
       </li>
     
@@ -1033,10 +1085,6 @@ base=true这个配置，用来不让</p>
     
       <li class="post">
         <a href="/blog/2012/01/03/ios-gcd/">GCD介绍</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2011/11/05/build-oauth2-provider/">build-oauth2-provider</a>
       </li>
     
   </ul>

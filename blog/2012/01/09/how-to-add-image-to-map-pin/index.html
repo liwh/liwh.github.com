@@ -1,0 +1,327 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>给地图大头针加图片 - Code for fun</title>
+  <meta name="author" content="liwh">
+
+  
+  <meta name="description" content="我们在IPhone中使用谷歌地图的时候，我们可以在地图中插入大头针。这些大头针左边显示了图片，右边一般显示>标记，用于显示更加详细的信息。
+下面，介绍下，如何在大头针中加图片。 每个Annotations都可以用一个callout用于显示信息， 默认，我们点击的时候，只显示 title 和 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://liwh.github.com/blog/2012/01/09/how-to-add-image-to-map-pin">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Code for fun" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-20088141-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Code for fun</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:liwh.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/about">About Me</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">给地图大头针加图片</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-01-09T13:26:00+08:00" pubdate data-updated="true">Jan 9<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>我们在IPhone中使用谷歌地图的时候，我们可以在地图中插入大头针。这些大头针左边显示了图片，右边一般显示>标记，用于显示更加详细的信息。
+下面，介绍下，如何在大头针中加图片。</p>
+
+<p>每个Annotations都可以用一个callout用于显示信息， 默认，我们点击的时候，只显示 <strong>title</strong> 和 <strong>subtitle</strong> ,但是，我们可以为它增加
+左边和右边的accessory视图。一般，我们左侧会增加图片，右边一般增加一个UIButton（UIButtonTypeDetailDisclosure).下面，介绍如何增加：</p>
+
+<ul>
+<li>首先，给地图控制器增加下面方法，用于设置图片</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>MapViewController.m</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='obj-c'><span class='line'><span class="o">-</span><span class="p">(</span><span class="n">MKAnnotationView</span> <span class="o">*</span><span class="p">)</span><span class="nl">mapView:</span><span class="p">(</span><span class="n">MKMapView</span> <span class="o">*</span><span class="p">)</span><span class="n">mapView</span> <span class="nl">viewForAnnotation:</span><span class="p">(</span><span class="kt">id</span><span class="o">&lt;</span><span class="n">MKAnnotation</span><span class="o">&gt;</span><span class="p">)</span><span class="n">annotation</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="c1">//为针上增加左侧图片</span>
+</span><span class='line'>    <span class="n">MKAnnotationView</span> <span class="o">*</span><span class="n">aView</span> <span class="o">=</span> <span class="p">[</span><span class="n">mapView</span> <span class="nl">dequeueReusableAnnotationViewWithIdentifier:</span><span class="s">@&quot;MapVC&quot;</span><span class="p">];</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">aView</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">aView</span> <span class="o">=</span> <span class="p">[[</span><span class="n">MKPinAnnotationView</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithAnnotation:</span><span class="n">annotation</span> <span class="nl">reuseIdentifier:</span><span class="s">@&quot;MapVC&quot;</span><span class="p">];</span>
+</span><span class='line'>        <span class="n">aView</span><span class="p">.</span><span class="n">canShowCallout</span> <span class="o">=</span> <span class="n">YES</span><span class="p">;</span> 
+</span><span class='line'>        <span class="n">aView</span><span class="p">.</span><span class="n">leftCalloutAccessoryView</span>  <span class="o">=</span> <span class="p">[[</span><span class="n">UIImageView</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithFrame:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">)];</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="n">aView</span><span class="p">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">[(</span><span class="n">UIImageView</span> <span class="o">*</span><span class="p">)</span><span class="n">aView</span><span class="p">.</span><span class="n">leftCalloutAccessoryView</span> <span class="nl">setImage:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">aView</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nl">mapView:</span><span class="p">(</span><span class="n">MKMapView</span> <span class="o">*</span><span class="p">)</span><span class="n">mapView</span> <span class="nl">didSelectAnnotationView:</span><span class="p">(</span><span class="n">MKAnnotationView</span> <span class="o">*</span><span class="p">)</span><span class="n">aView</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">UIImage</span> <span class="o">*</span><span class="n">image</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">delegate</span> <span class="nl">mapViewController:</span><span class="n">self</span> <span class="nl">imageForAnnotation:</span><span class="n">aView</span><span class="p">.</span><span class="n">annotation</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">[(</span><span class="n">UIImageView</span> <span class="o">*</span><span class="p">)</span><span class="n">aView</span><span class="p">.</span><span class="n">leftCalloutAccessoryView</span> <span class="nl">setImage:</span><span class="n">image</span><span class="p">];</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>设置delegate用于传递所需要显示的图片。</li>
+</ul>
+
+
+<p>具体代码可参见<a href="https://github.com/liwh/PhotoDetail/commit/f90a44a5168a2ca5e2728ab3f84b9667132cac00">样例代码</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">liwh</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-01-09T13:26:00+08:00" pubdate data-updated="true">Jan 9<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/ios/'>iOS</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://liwh.github.com/blog/2012/01/09/how-to-add-image-to-map-pin/" data-via="" data-counturl="http://liwh.github.com/blog/2012/01/09/how-to-add-image-to-map-pin/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/01/08/how-to-build-cocoa2d-application/" title="Previous Post: 构建cocos2d开发环境">&laquo; 构建cocos2d开发环境</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2012/01/09/how-to-add-image-to-map-pin/">给地图大头针加图片</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/08/how-to-build-cocoa2d-application/">构建cocos2d开发环境</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/06/introduct-ui-gesture-recognizer/">IOS手势操作</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/06/how-to-draw-circle/">how-to-draw-circle</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/01/03/ios-gcd/">GCD介绍</a>
+      </li>
+    
+  </ul>
+</section>
+<section>
+  <h1>About Me</h1>
+  <ul id="about_me">
+      <li class="post">
+         I am a developer using Ruby,Java and obj-c!
+      </li>
+      <li class="post">
+         <a href="http://about.me/weihuilee">About Me</a>
+      </li>
+	<li class="post">
+         <a href="http://github.com/liwh">Github</a>
+      </li>
+    <li class="post">
+        <a href="http://twitter.com/weihuilee">Twitter</a>
+     </li>
+  </ul>
+</section>
+
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2012 - liwh -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'liwh87';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://liwh.github.com/blog/2012/01/09/how-to-add-image-to-map-pin/';
+        var disqus_url = 'http://liwh.github.com/blog/2012/01/09/how-to-add-image-to-map-pin/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
