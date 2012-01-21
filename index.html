@@ -9,8 +9,7 @@
   <meta name="author" content="liwh">
 
   
-  <meta name="description" content="我们在IPhone中使用谷歌地图的时候，我们可以在地图中插入大头针。这些大头针左边显示了图片，右边一般显示>标记，用于显示更加详细的信息。
-下面，介绍下，如何在大头针中加图片。 每个Annotations都可以用一个callout用于显示信息， 默认，我们点击的时候，只显示 title 和 &hellip;">
+  <meta name="description" content="最近，想折腾下nodejs,所以，就想折腾一下nodejs搭建一个blog,现在支持nodejs的主机也还有不少的。比如,heroku目前就支持nodejs的主机，当然，还有其它的一些了。 如何开始 这次，我们选用 node + express(类似ruby的sinatra框架) + &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -50,6 +49,8 @@
   <header role="banner"><hgroup>
   <h1><a href="/">Code for fun</a></h1>
   
+    <h2>Do It Right Now!</h2>
+  
 </hgroup>
 
 </header>
@@ -76,6 +77,168 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2012/01/18/create-blog-with-nodejs/">用NodeJS创建博客</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-01-18T14:07:00+08:00" pubdate data-updated="true">Jan 18<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>最近，想折腾下nodejs,所以，就想折腾一下nodejs搭建一个blog,现在支持nodejs的主机也还有不少的。比如,<a href="http://devcenter.heroku.com/articles/node-js">heroku</a>目前就支持nodejs的主机，当然，还有其它的一些了。</p>
+
+<h4>如何开始</h4>
+
+<p>这次，我们选用 node + express(类似ruby的sinatra框架) + mongoDB(NoSQL数据库). 一般来说，express我们一般用npm(node的包管理)进行安装，只有下面简单的命令就可以了。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo node install express -g
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>实现功能</h4>
+
+<p>在这里，我们主要为了实现功能:</p>
+
+<ul>
+<li>创建新文章</li>
+<li>展示所有文章列表</li>
+</ul>
+
+
+<h4>具体步骤</h4>
+
+<p>下面，我们就介绍详细的具体步骤。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mkdir blog
+</span><span class='line'><span class="nb">cd </span>blog
+</span><span class='line'>express -c stylus <span class="c">#创建使用jade模版引擎和stylus css引擎的应用</span>
+</span><span class='line'>npm install -d  <span class="c">#下载所依赖的包</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>构建对应的ORM,用于处理文章的CRUD操作</h4>
+
+<p>首先，我们得构建对应的操作来处理文章的crud操作，代码如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">mongoose</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">MONGOLAB_URI</span> <span class="o">||</span> <span class="s1">&#39;mongodb://localhost/blog&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Article</span> <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Blog&#39;</span><span class="p">,</span> <span class="k">new</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">body</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">}));</span>
+</span><span class='line'><span class="c1">//具体的crud可参照 https://github.com/LearnBoost/mongoose#readme</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>新增文章</h4>
+
+<p>首先，我们定义请求/blogs/new页面为新增的页面。 在此页面存在表单元素title和body.我们通过填写对应的内容，然后发送post请求，增加对应的内容。具体代码如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/blogs/new&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span><span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;blog_new.jade&#39;</span><span class="p">,{</span><span class="nx">locals</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">title</span><span class="o">:</span> <span class="s2">&quot;新增文章&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/blogs/new&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">article</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Article</span><span class="p">({</span><span class="nx">title</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">param</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">),</span> <span class="nx">body</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">param</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">)});</span>
+</span><span class='line'>    <span class="nx">article</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span>
+</span><span class='line'>      <span class="kd">function</span><span class="p">(</span> <span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;there is a error occured!&quot;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="p">);</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>查看文章</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/blogs/:id&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span><span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">articles</span> <span class="o">=</span> <span class="nx">Article</span><span class="p">.</span><span class="nx">find</span><span class="p">({});</span>
+</span><span class='line'>    <span class="nx">Article</span><span class="p">.</span><span class="nx">findById</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">article</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;show.jade&#39;</span><span class="p">,{</span><span class="nx">locals</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>       <span class="nx">title</span><span class="o">:</span> <span class="nx">article</span><span class="p">.</span><span class="nx">title</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">body</span><span class="o">:</span> <span class="nx">article</span><span class="p">.</span><span class="nx">body</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>   <span class="p">});</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>参考资料</h4>
+
+<ul>
+<li><a href="http://blog.xebia.com/2011/06/24/getting-started-with-node-js-npm-coffeescript-express-jade-and-redis/">node jade</a></li>
+<li><a href="http://howtonode.org/express-mongodb">Blog rolling with mongoDB, express and Node.js</a></li>
+<li><a href="https://github.com/LearnBoost/mongoose">mongoose</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -995,64 +1158,6 @@ base=true这个配置，用来不让</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2011/06/09/use-pow-for-railsapp/">使用pow作为rails Server</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2011-06-09T00:00:00+08:00" pubdate data-updated="true">Jun 9<span>th</span>, 2011</time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><a href="https://github.com/37signals/pow">Pow</a> 是信号公司一个开源的rack-server,官方版本只支持Mac OS平台,它的主要有点是零配置，我们可以很方便的
-访问我们的app.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#安装直接使用下面这句就可以了</span>
-</span><span class='line'>  curl get.pow.cx|sh
-</span><span class='line'>  <span class="c">#只要下面简单的一句话，我们就可以将我们的app利用pow去运行了</span>
-</span><span class='line'>  <span class="c">#这样我们就能通过http://shop.dev去访问我们的项目了</span>
-</span><span class='line'>  <span class="nb">cd</span> ~/.pow <span class="o">&amp;&amp;</span> ln -s ~/workplace/shop
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>当我们使用rvm管理ruby版本的时候，我们需要在我们的项目中添加.rvmrc文件。
-<a href="http://beginrescueend.com/workflow/rvmrc/">具体参见</a> ，然后，创建对应的gemset之后，
-我们就可以访问了。</p>
-
-<p>Pow默认的日志文件是保存在~/Library/Logs/Pow/apps/#{app}.log 中的，app对应相应的程序。</p>
-
-<p>为了更方便的使用pow,我们可以使用 <a href="https://github.com/Rodreegez/powder">powder</a> 来操作pow.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/blog/page/2/">&larr; Older</a>
@@ -1068,6 +1173,10 @@ base=true这个配置，用来不让</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/01/18/create-blog-with-nodejs/">用NodeJS创建博客</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/01/09/how-to-add-image-to-map-pin/">给地图大头针加图片</a>
       </li>
     
@@ -1081,10 +1190,6 @@ base=true这个配置，用来不让</p>
     
       <li class="post">
         <a href="/blog/2012/01/06/how-to-draw-circle/">how-to-draw-circle</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/01/03/ios-gcd/">GCD介绍</a>
       </li>
     
   </ul>

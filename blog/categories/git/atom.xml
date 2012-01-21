@@ -4,7 +4,7 @@
   <title><![CDATA[Category: git | Code for fun]]></title>
   <link href="http://liwh.github.com/blog/categories/git/atom.xml" rel="self"/>
   <link href="http://liwh.github.com/"/>
-  <updated>2012-01-12T20:26:13+08:00</updated>
+  <updated>2012-01-21T16:56:31+08:00</updated>
   <id>http://liwh.github.com/</id>
   <author>
     <name><![CDATA[liwh]]></name>
@@ -130,6 +130,8 @@
   git rebase -- abort
   #更新本地分支的远程repo的url
   git remote set-url remote_name new_url
+  #合并多个commit,可见 http://stackoverflow.com/questions/4936778/git-merge-commits
+  git rebase -i HEAD~2  #然后对文件进行编译，可达到预定的效果
 </code></p>
 
 <h3>储存</h3>

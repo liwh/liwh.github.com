@@ -4,7 +4,7 @@
   <title><![CDATA[Code for fun]]></title>
   <link href="http://liwh.github.com/atom.xml" rel="self"/>
   <link href="http://liwh.github.com/"/>
-  <updated>2012-01-12T20:26:13+08:00</updated>
+  <updated>2012-01-21T16:56:31+08:00</updated>
   <id>http://liwh.github.com/</id>
   <author>
     <name><![CDATA[liwh]]></name>
@@ -12,6 +12,141 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[用NodeJS创建博客]]></title>
+    <link href="http://liwh.github.com/blog/2012/01/18/create-blog-with-nodejs/"/>
+    <updated>2012-01-18T14:07:00+08:00</updated>
+    <id>http://liwh.github.com/blog/2012/01/18/create-blog-with-nodejs</id>
+    <content type="html"><![CDATA[<p>最近，想折腾下nodejs,所以，就想折腾一下nodejs搭建一个blog,现在支持nodejs的主机也还有不少的。比如,<a href="http://devcenter.heroku.com/articles/node-js">heroku</a>目前就支持nodejs的主机，当然，还有其它的一些了。</p>
+
+<h4>如何开始</h4>
+
+<p>这次，我们选用 node + express(类似ruby的sinatra框架) + mongoDB(NoSQL数据库). 一般来说，express我们一般用npm(node的包管理)进行安装，只有下面简单的命令就可以了。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo node install express -g
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>实现功能</h4>
+
+<p>在这里，我们主要为了实现功能:</p>
+
+<ul>
+<li>创建新文章</li>
+<li>展示所有文章列表</li>
+</ul>
+
+
+<h4>具体步骤</h4>
+
+<p>下面，我们就介绍详细的具体步骤。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mkdir blog
+</span><span class='line'><span class="nb">cd </span>blog
+</span><span class='line'>express -c stylus <span class="c">#创建使用jade模版引擎和stylus css引擎的应用</span>
+</span><span class='line'>npm install -d  <span class="c">#下载所依赖的包</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>构建对应的ORM,用于处理文章的CRUD操作</h4>
+
+<p>首先，我们得构建对应的操作来处理文章的crud操作，代码如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">mongoose</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">MONGOLAB_URI</span> <span class="o">||</span> <span class="s1">&#39;mongodb://localhost/blog&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="kd">var</span> <span class="nx">Article</span> <span class="o">=</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Blog&#39;</span><span class="p">,</span> <span class="k">new</span> <span class="nx">mongoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">({</span>
+</span><span class='line'>    <span class="nx">title</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">body</span><span class="o">:</span> <span class="nb">String</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">}));</span>
+</span><span class='line'><span class="c1">//具体的crud可参照 https://github.com/LearnBoost/mongoose#readme</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>新增文章</h4>
+
+<p>首先，我们定义请求/blogs/new页面为新增的页面。 在此页面存在表单元素title和body.我们通过填写对应的内容，然后发送post请求，增加对应的内容。具体代码如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/blogs/new&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span><span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;blog_new.jade&#39;</span><span class="p">,{</span><span class="nx">locals</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">title</span><span class="o">:</span> <span class="s2">&quot;新增文章&quot;</span><span class="p">,</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/blogs/new&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">article</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Article</span><span class="p">({</span><span class="nx">title</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">param</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">),</span> <span class="nx">body</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">param</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">)});</span>
+</span><span class='line'>    <span class="nx">article</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span>
+</span><span class='line'>      <span class="kd">function</span><span class="p">(</span> <span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;there is a error occured!&quot;</span><span class="p">);</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>      <span class="p">);</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>查看文章</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/blogs/:id&#39;</span><span class="p">,</span><span class="kd">function</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span><span class="nx">res</span><span class="p">){</span>
+</span><span class='line'>    <span class="nx">articles</span> <span class="o">=</span> <span class="nx">Article</span><span class="p">.</span><span class="nx">find</span><span class="p">({});</span>
+</span><span class='line'>    <span class="nx">Article</span><span class="p">.</span><span class="nx">findById</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">article</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;show.jade&#39;</span><span class="p">,{</span><span class="nx">locals</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>       <span class="nx">title</span><span class="o">:</span> <span class="nx">article</span><span class="p">.</span><span class="nx">title</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">body</span><span class="o">:</span> <span class="nx">article</span><span class="p">.</span><span class="nx">body</span><span class="p">,</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>   <span class="p">});</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>参考资料</h4>
+
+<ul>
+<li><a href="http://blog.xebia.com/2011/06/24/getting-started-with-node-js-npm-coffeescript-express-jade-and-redis/">node jade</a></li>
+<li><a href="http://howtonode.org/express-mongodb">Blog rolling with mongoDB, express and Node.js</a></li>
+<li><a href="https://github.com/LearnBoost/mongoose">mongoose</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[给地图大头针加图片]]></title>
@@ -1520,225 +1655,6 @@ opt + cmd + . :自动增加html close tag</p>
 <h2>参考资料</h2>
 
 <p> <a href="https://wiki.archlinux.org/index.php/Zsh">zshwiki</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[git使用]]></title>
-    <link href="http://liwh.github.com/blog/2010/12/24/introduce-git/"/>
-    <updated>2010-12-24T00:00:00+08:00</updated>
-    <id>http://liwh.github.com/blog/2010/12/24/introduce-git</id>
-    <content type="html"><![CDATA[<p>git是现在最流行的版本的版本控制系统了,并且它是免费而且开源的。并且它支持多分支，我们可以很轻易
-的创建分支和合并分支。现在越来越多的项目正在用git,如eclipse rails android.. 除此之外，现在常用
-的版本控制系统还有cvs,svn,vss等等。。</p>
-
-<h2>git quick start</h2>
-
-<p> 例如，当我们向github平台提交我们的代码时，我们可以执行以下代码</p>
-
-<div>
-  <pre>
-    <code class='bash'>git add .
-  git commit -m 'first commit'
-  #将本地本件提交到github server的master brach
-  git push this master</code>
-  </pre>
-</div>
-
-
-<p>这样，我们的代码就提交到github server了，我们在github的project中就能清楚看到我们提交的代码.</p>
-
-<h2>git command list</h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c"># 显示当前代码库的状态，增加，修改，删除了什么文件，这样我们可以很清楚的看到，我们对代码的改动.</span>
-</span><span class='line'>  git status
-</span><span class='line'>
-</span><span class='line'>  <span class="c"># 显示代码的改动细节，方便我们对代码进行对比。知道改动了什么。 后面的options color是为了方便利用颜色的对比清晰的看到改动</span>
-</span><span class='line'>  git diff --color
-</span><span class='line'>
-</span><span class='line'>  <span class="c">#查看git的忽略文件（即上传的时候不提交的文件，这个可以通过正则去匹配）</span>
-</span><span class='line'>  cat .gitignore
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>step by step learning</h2>
-
-<h3>用户配置</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c"># 设置用户</span>
-</span><span class='line'>  git config --global user.name <span class="s2">&quot;liwh&quot;</span>
-</span><span class='line'>  git config --global user.email <span class="s2">&quot;liwh87@gmail.com&quot;</span>
-</span><span class='line'>  <span class="c">#设置默认的提交的仓库，这样，修改的代码会默认提交到此仓库</span>
-</span><span class='line'>  git config --global push.default <span class="s2">&quot;example&quot;</span>
-</span><span class='line'>  <span class="c">#查看设置的git变量</span>
-</span><span class='line'>  git config --list
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>高亮显示</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#在控制台高亮显示信息</span>
-</span><span class='line'>  git config --global color.status auto
-</span><span class='line'>  git config --global color.branch auto
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>创建仓库，增加和提交</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#初始化本地仓库，讲当前目录下文件，加入git的管理</span>
-</span><span class='line'>  git init
-</span><span class='line'>  <span class="c">#将所有的文件和目录加入git控制</span>
-</span><span class='line'>  git add .
-</span><span class='line'>  <span class="c">#提交文件到本地的仓库</span>
-</span><span class='line'>  git commit -m <span class="s1">&#39;initial commit&#39;</span>
-</span><span class='line'>  <span class="c">#查看日志文件</span>
-</span><span class='line'>  git log
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>查看不同和提交更改</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#查看不同</span>
-</span><span class='line'>  git diff --color
-</span><span class='line'>  <span class="c">#提交更改</span>
-</span><span class='line'>  git commit -m -a <span class="s1">&#39;first commit&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>增加remote</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#add ../remote-repository.git with the name origin</span>
-</span><span class='line'>  git remote add origin ../remote-repository.git
-</span><span class='line'>  git commit -a -m <span class="s1">&#39;this is the first commit the remote repository&#39;</span>
-</span><span class='line'>  git push origin
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>创建分支</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#add branch</span>
-</span><span class='line'>  git branch b
-</span><span class='line'>  <span class="c">#go to the branch b</span>
-</span><span class='line'>  git checkout b
-</span><span class='line'>  <span class="c">#delete branch b</span>
-</span><span class='line'>  git branch -d b
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>合并分支</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#将b分支合并到当前分支</span>
-</span><span class='line'>  git merge b
-</span><span class='line'>  <span class="c">#选择某一个分支中的一个或几个commit来进行合并</span>
-</span><span class='line'>  git cherry-pick commit-id
-</span><span class='line'>  <span class="c">#还有就是通过git rebase 来合并，它会根据时间顺序来进行一个一个的合并</span>
-</span><span class='line'>  git rebase  b
-</span><span class='line'>  <span class="c">#处理冲突继续</span>
-</span><span class='line'>  git rebase --continu
-</span><span class='line'>  <span class="c">#取消合并</span>
-</span><span class='line'>  git rebase -- abort
-</span><span class='line'>  <span class="c">#更新本地分支的远程repo的url</span>
-</span><span class='line'>  git remote <span class="nb">set</span>-url remote_name new_url
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>储存</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#储存变更</span>
-</span><span class='line'>  git stash
-</span><span class='line'>  <span class="c">#查看储存列表</span>
-</span><span class='line'>  git stash list
-</span><span class='line'>  <span class="c">#还原最近一次仓库里的代码</span>
-</span><span class='line'>  git stash apply
-</span><span class='line'>  <span class="c">#指定恢复的代码</span>
-</span><span class='line'>  git stash apply stash@<span class="o">{</span>2<span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Tag</h3>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#增加tag</span>
-</span><span class='line'>  git tag -a v0.5 -m “Version 0.5 Stable”
-</span><span class='line'>  <span class="c">#删除tag</span>
-</span><span class='line'>  git tag -d v0.0.1
-</span><span class='line'>  <span class="c">#github add tag</span>
-</span><span class='line'>  git push origin tagname
-</span><span class='line'>  <span class="c">#remove tag</span>
-</span><span class='line'>  git push origin :tagname
-</span><span class='line'>  <span class="c">#提交本地的最近的tag</span>
-</span><span class='line'>  git push origin --tags
-</span></code></pre></td></tr></table></div></figure>
-
 ]]></content>
   </entry>
   

@@ -51,6 +51,8 @@
   <header role="banner"><hgroup>
   <h1><a href="/">Code for fun</a></h1>
   
+    <h2>Do It Right Now!</h2>
+  
 </hgroup>
 
 </header>
@@ -254,6 +256,8 @@
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'>  <span class="c">#将b分支合并到当前分支</span>
 </span><span class='line'>  git merge b
 </span><span class='line'>  <span class="c">#选择某一个分支中的一个或几个commit来进行合并</span>
@@ -266,6 +270,8 @@
 </span><span class='line'>  git rebase -- abort
 </span><span class='line'>  <span class="c">#更新本地分支的远程repo的url</span>
 </span><span class='line'>  git remote <span class="nb">set</span>-url remote_name new_url
+</span><span class='line'>  <span class="c">#合并多个commit,可见 http://stackoverflow.com/questions/4936778/git-merge-commits</span>
+</span><span class='line'>  git rebase -i HEAD~2  <span class="c">#然后对文件进行编译，可达到预定的效果</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -377,6 +383,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2012/01/18/create-blog-with-nodejs/">用NodeJS创建博客</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2012/01/09/how-to-add-image-to-map-pin/">给地图大头针加图片</a>
       </li>
     
@@ -390,10 +400,6 @@
     
       <li class="post">
         <a href="/blog/2012/01/06/how-to-draw-circle/">how-to-draw-circle</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2012/01/03/ios-gcd/">GCD介绍</a>
       </li>
     
   </ul>
