@@ -1,0 +1,38 @@
+---
+layout: post
+title: "GCD介绍"
+date: 2012-01-03 16:21
+comments: true
+categories: ios
+---
+
+GCD是ios 4.0引入用于在应用程序中管理多个任务执行的技术。是C API的一部分。一般我们将其替代作为应用程序的多线程处理。
+GCD的函数一般以"dispatch_"开头，我们可以使用这个执行某些后台任务，然后返回处理主线程的代码。
+
+####例子
+
+下面介绍一个例子，创建gcd队列下载图片:
+
+主要代码：
+
+```obj-c
+- (void)viewWillAppear:(BOOL)animated
+{
+  tch_queue_t downloadQueue = dispatch_queue_create(“image downloader”, NULL);
+  dispatch_async(downloadQueue, ^{
+      NSData *imageData = [NSData dataWithContentsOfURL:networkURL];
+      //UIKit使用只能在main thread中
+      dispatch_async(dispatch_get_main_queue(), ^{
+        UIImage *image = [UIImage imageWithData:imageData];
+        self.imageView.image = image;
+        self.imageView.frame = CGRectMake(0, 0, image.size.width, image.size.height);
+        self.scrollView.contentSize = image.size;
+        });
+      });
+
+  dispatch_release(downloadQueue);
+}
+```
+
+####参考资料
+[GCD](http://developer.apple.com/library/ios/#documentation/Performance/Reference/GCD_libdispatch_Ref/Reference/rexerence.html)
